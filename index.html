@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html class="h-full bg-slate-950" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>CYBER STRIKE // DUAL ARENA 3D - 2-Player Tactical FPS Engine</title>
+  
+  <!-- Tailwind CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=JetBrains+Mono:wght@400;600;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet"/>
+  
+  <!-- Master Game Stylesheet -->
+  <link rel="stylesheet" href="css/game-styles.css"/>
+
+  <!-- Three.js r125 -->
+  <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            tactical: ['Chakra Petch', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            orbitron: ['Orbitron', 'sans-serif'],
+          },
+          colors: {
+            cyan: { neon: '#00f3ff', glow: '#00d0dc' },
+            magenta: { neon: '#ff0055', glow: '#cc0044' },
+            yellow: { neon: '#ffe600' },
+            green: { neon: '#00ff66' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="h-full w-full overflow-hidden select-none bg-[#05070f] font-tactical text-white">
+
+  <!-- =========================================================================
+       1. SCREEN: CUSTOM OPENING BOOT ANIMATION & LOGO REVEAL
+       ========================================================================= -->
+  <div id="screen-boot" class="screen-layer flex flex-col items-center justify-center p-6 text-center select-none">
+    <div class="max-w-2xl w-full flex flex-col items-center gap-6">
+      <!-- Animated Glitch Cyber Logo -->
+      <div class="logo-glitch relative w-24 h-24 md:w-32 md:h-32 flex items-center justify-center">
+        <svg viewBox="0 0 100 100" class="w-full h-full text-cyan-neon filter drop-shadow-[0_0_16px_rgba(0,243,255,0.8)]" fill="currentColor">
+          <polygon points="50,5 95,28 95,72 50,95 5,72 5,28" fill="none" stroke="#00f3ff" stroke-width="4"/>
+          <polygon points="50,15 85,33 85,67 50,85 15,67 15,33" fill="rgba(0,243,255,0.15)" stroke="#ff0055" stroke-width="2"/>
+          <polygon points="50,28 72,40 72,60 50,72 28,60 28,40" fill="#00f3ff"/>
+        </svg>
+      </div>
+
+      <div class="space-y-1">
+        <h1 class="text-3xl md:text-5xl font-orbitron font-extrabold tracking-wider text-white text-glow-cyan">
+          CYBER STRIKE
+        </h1>
+        <p class="text-sm md:text-base font-mono tracking-widest text-cyan-neon/80 uppercase">
+          // DUAL ARENA 3D TACTICAL ENGINE //
+        </p>
+      </div>
+
+      <!-- Terminal Diagnostics -->
+      <div class="w-full bg-slate-950/90 border border-cyan-neon/40 p-4 rounded text-left boot-terminal-text shadow-[0_0_20px_rgba(0,243,255,0.15)] clip-tactical-both">
+        <div id="boot-terminal-lines" class="space-y-1 font-mono text-xs md:text-sm">
+          <div>> INITIALIZING CYBER_STRIKE KERNEL v4.8... [OK]</div>
+          <div>> VIRTUAL SHADER PIPELINE: THREE.JS ACES_FILMIC ACTIVE</div>
+          <div>> WEAPON RIGS DETECTED: 5 TACTICAL PLATFORMS READY</div>
+          <div>> MULTIPLAYER BUS: P2P WEBRTC &amp; LOCAL BROADCAST ONLINE</div>
+          <div class="text-cyan-neon font-bold">> SYSTEM OPERATIONAL. AWAITING OPERATIVE AUTHENTICATION...</div>
+        </div>
+      </div>
+
+      <!-- Initialize Button -->
+      <button id="btn-boot-start" class="btn-cyber text-base md:text-lg px-8 py-3 pulse-cyan">
+        INITIALIZE SYSTEM &amp; ENTER
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. SCREEN: SHADER & ASSET PRELOADER
+       ========================================================================= -->
+  <div id="screen-loading" class="screen-layer hidden-screen flex flex-col items-center justify-center p-6 text-center select-none">
+    <div class="max-w-md w-full space-y-6">
+      <div class="flex items-center justify-center gap-3">
+        <span class="inline-block w-3 h-3 rounded-full bg-cyan-neon animate-ping"></span>
+        <h2 class="text-xl font-orbitron font-bold tracking-widest text-white text-glow-cyan">
+          WARMING COMBAT SHADERS
+        </h2>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="w-full bg-slate-900 border border-cyan-neon/40 h-3 rounded-full overflow-hidden p-0.5">
+        <div id="loading-bar" class="h-full bg-cyan-neon rounded-full loading-bar-fill" style="width: 0%;"></div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+        <span id="loading-status-text">Generating procedural arena textures...</span>
+        <span id="loading-percent-text" class="text-cyan-neon font-bold">0%</span>
+      </div>
+
+      <!-- Tip of the Match -->
+      <div class="bg-slate-950/80 border-l-2 border-magenta-neon p-3 text-left rounded text-xs font-mono text-slate-300">
+        <strong class="text-magenta-neon">TACTICAL INTEL:</strong>
+        <span id="loading-tip">Press [Q] or double-tap Shift to burst-dash through enemy fire. Slide with [C] while sprinting to maintain momentum!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3. SCREEN: MAIN LOBBY & OPERATIVE CUSTOMIZATION HUB
+       ========================================================================= -->
+  <div id="screen-lobby" class="screen-layer hidden-screen flex flex-col justify-between p-4 md:p-8 select-none overflow-y-auto">
+    <!-- Lobby Top Bar -->
+    <header class="flex flex-wrap items-center justify-between gap-4 border-b border-cyan-neon/30 pb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 flex items-center justify-center bg-cyan-neon/10 border border-cyan-neon rounded clip-badge">
+          <span class="font-orbitron font-extrabold text-cyan-neon text-lg">CS</span>
+        </div>
+        <div>
+          <h2 class="font-orbitron font-bold text-lg md:text-xl text-white text-glow-cyan tracking-wider">
+            CYBER STRIKE // LOBBY
+          </h2>
+          <p class="text-xs font-mono text-cyan-neon/70">SECTOR COMBAT TERMINAL v4.8</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 md:gap-2">
+        <button class="lobby-tab-btn active" data-tab="tab-customization">OPERATIVE</button>
+        <button class="lobby-tab-btn" data-tab="tab-maps">MAP ARCHIVES</button>
+        <button class="lobby-tab-btn" data-tab="tab-modes">MATCHMAKING</button>
+        <button class="lobby-tab-btn" data-tab="tab-friends">FRIENDS</button>
+      </nav>
+
+      <!-- Dual Settings Buttons -->
+      <div class="flex items-center gap-2">
+        <button id="btn-open-global-settings" class="btn-cyber text-xs py-2 px-3 flex items-center gap-1.5" title="Manage Global Game Graphics, Audio Links & Keybinds">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          GAME SETTINGS
+        </button>
+        <button id="btn-open-play-settings" class="btn-cyber btn-cyber-magenta text-xs py-2 px-3 flex items-center gap-1.5" title="Change Combat Rules, Physics, Bots & Kills">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          PLAY SETTINGS
+        </button>
+      </div>
+    </header>
+
+    <!-- Lobby Tab Contents Container -->
+    <main class="my-6 flex-1 min-h-[440px]">
+      
+      <!-- TAB 1: OPERATIVE CUSTOMIZATION -->
+      <section id="tab-customization" class="lobby-tab-content grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+        <!-- Left: 3D Operative Stage Viewport -->
+        <div class="lg:col-span-6 bg-slate-950/80 border border-cyan-neon/30 rounded p-4 flex flex-col clip-tactical-tl relative">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <span class="text-xs font-mono text-cyan-neon font-bold uppercase tracking-wider">// 3D OPERATIVE PREVIEW</span>
+            <span class="text-[11px] font-mono text-slate-400">DRAG TO ROTATE 360°</span>
+          </div>
+          <div id="avatar-viewport-container" class="flex-1 w-full h-[360px] md:h-[400px] cursor-grab active:cursor-grabbing"></div>
+          <div class="text-center pt-2 text-xs font-mono text-slate-400">
+            OPERATIVE: <strong id="preview-op-name" class="text-cyan-neon">CYBER_VIPER</strong>
+          </div>
+        </div>
+
+        <!-- Right: Customization Controls -->
+        <div class="lg:col-span-6 bg-slate-950/80 border border-cyan-neon/30 rounded p-6 flex flex-col justify-between clip-tactical-br space-y-4">
+          <div>
+            <h3 class="font-orbitron font-bold text-lg text-white mb-4">TACTICAL OPERATIVE LOADOUT</h3>
+            
+            <!-- Operative Name Input -->
+            <div class="mb-4">
+              <label class="block text-xs font-mono text-cyan-neon uppercase tracking-wider mb-1">CALL-SIGN / NAME</label>
+              <input type="text" id="input-op-name" value="CYBER_VIPER" maxlength="16" class="w-full bg-slate-900 border border-cyan-neon/50 px-3 py-2 text-white font-mono rounded text-sm focus:border-cyan-neon focus:ring-1 focus:ring-cyan-neon outline-none"/>
+            </div>
+
+            <!-- Skin & Suit Color Palette -->
+            <div class="mb-4">
+              <label class="block text-xs font-mono text-cyan-neon uppercase tracking-wider mb-2">ARMOR SUIT SKIN</label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <button class="skin-btn btn-cyber text-xs py-2 px-3 active" data-skin="neon">● NEON CYBER</button>
+                <button class="skin-btn btn-cyber text-xs py-2 px-3" data-skin="shadow">● SHADOW OPS</button>
+                <button class="skin-btn btn-cyber text-xs py-2 px-3" data-skin="arctic">● ARCTIC GHOST</button>
+                <button class="skin-btn btn-cyber text-xs py-2 px-3" data-skin="solar">● SOLAR ELITE</button>
+                <button class="skin-btn btn-cyber text-xs py-2 px-3" data-skin="toxic">● TOXIC HAZARD</button>
+              </div>
+            </div>
+
+            <!-- Visor Glow Color -->
+            <div class="mb-4">
+              <label class="block text-xs font-mono text-cyan-neon uppercase tracking-wider mb-2">TACTICAL VISOR GLOW</label>
+              <div class="flex items-center gap-3">
+                <button class="visor-btn w-8 h-8 rounded-full border-2 border-white shadow-[0_0_10px_#00f3ff]" style="background-color: #00f3ff;" data-color="#00f3ff"></button>
+                <button class="visor-btn w-8 h-8 rounded-full border border-slate-700 hover:border-white transition-all" style="background-color: #ff0055;" data-color="#ff0055"></button>
+                <button class="visor-btn w-8 h-8 rounded-full border border-slate-700 hover:border-white transition-all" style="background-color: #ffe600;" data-color="#ffe600"></button>
+                <button class="visor-btn w-8 h-8 rounded-full border border-slate-700 hover:border-white transition-all" style="background-color: #00ff66;" data-color="#00ff66"></button>
+                <button class="visor-btn w-8 h-8 rounded-full border border-slate-700 hover:border-white transition-all" style="background-color: #b537f2;" data-color="#b537f2"></button>
+              </div>
+            </div>
+
+            <!-- 5 Weapons Arsenal Preview -->
+            <div>
+              <label class="block text-xs font-mono text-cyan-neon uppercase tracking-wider mb-2">TACTICAL ARSENAL INSPECTOR</label>
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-center text-xs font-mono">
+                <div class="weapon-preview-card p-2 bg-slate-900/80 border border-cyan-neon/40 rounded cursor-pointer" data-weapon="revolver">
+                  <div class="text-[10px] text-slate-400">SLOT 1</div>
+                  <div class="font-bold text-cyan-neon">REVOLVER</div>
+                  <div class="text-[9px] text-slate-500">6 RDS // 46 DMG</div>
+                </div>
+                <div class="weapon-preview-card p-2 bg-slate-900/80 border border-slate-700 rounded cursor-pointer" data-weapon="rifle">
+                  <div class="text-[10px] text-slate-400">SLOT 2</div>
+                  <div class="font-bold text-magenta-neon">ARC-4 RIFLE</div>
+                  <div class="text-[9px] text-slate-500">30 RDS // AUTO</div>
+                </div>
+                <div class="weapon-preview-card p-2 bg-slate-900/80 border border-slate-700 rounded cursor-pointer" data-weapon="shotgun">
+                  <div class="text-[10px] text-slate-400">SLOT 3</div>
+                  <div class="font-bold text-yellow-neon">SHOTGUN</div>
+                  <div class="text-[9px] text-slate-500">8 RDS // SPREAD</div>
+                </div>
+                <div class="weapon-preview-card p-2 bg-slate-900/80 border border-slate-700 rounded cursor-pointer" data-weapon="railgun">
+                  <div class="text-[10px] text-slate-400">SLOT 4</div>
+                  <div class="font-bold text-cyan-neon">RAILGUN</div>
+                  <div class="text-[9px] text-slate-500">5 RDS // SCOPE</div>
+                </div>
+                <div class="weapon-preview-card p-2 bg-slate-900/80 border border-slate-700 rounded cursor-pointer" data-weapon="smg">
+                  <div class="text-[10px] text-slate-400">SLOT 5</div>
+                  <div class="font-bold text-emerald-400">VIPER SMG</div>
+                  <div class="text-[9px] text-slate-500">45 RDS // RAPID</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: MAP ARCHIVES (4 THEMATIC MAPS) -->
+      <section id="tab-maps" class="lobby-tab-content hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full">
+        <!-- Map 1 -->
+        <div class="map-card active-map p-4 flex flex-col justify-between" data-map="sector07">
+          <div class="space-y-2">
+            <div class="h-32 bg-slate-900 border border-cyan-neon/30 rounded flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,243,255,0.3)_0%,transparent_70%)]"></div>
+              <span class="font-orbitron font-extrabold text-cyan-neon text-xl z-10 text-glow-cyan">SECTOR 07</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-white text-sm">CYBER GRID</h4>
+            <p class="text-xs text-slate-400">High-tech synthwave grid with elevated central octagon, sniper perches, and kinetic jump pads.</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-cyan-neon">
+            <span>SIZE: 160x160m</span>
+            <span>JUMP PADS: 4</span>
+          </div>
+        </div>
+
+        <!-- Map 2 -->
+        <div class="map-card p-4 flex flex-col justify-between" data-map="solaris">
+          <div class="space-y-2">
+            <div class="h-32 bg-slate-900 border border-sky-500/30 rounded flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.3)_0%,transparent_70%)]"></div>
+              <span class="font-orbitron font-extrabold text-sky-400 text-xl z-10">SOLARIS</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-white text-sm">ORBITAL BAY</h4>
+            <p class="text-xs text-slate-400">Deep space hangar overlooking cosmic stars and nebula, featuring high suspended catwalks and gravity lifts.</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-sky-400">
+            <span>SIZE: 150x150m</span>
+            <span>LOW-G LIFT: 4</span>
+          </div>
+        </div>
+
+        <!-- Map 3 -->
+        <div class="map-card p-4 flex flex-col justify-between" data-map="inferno">
+          <div class="space-y-2">
+            <div class="h-32 bg-slate-900 border border-rose-600/30 rounded flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(225,29,72,0.3)_0%,transparent_70%)]"></div>
+              <span class="font-orbitron font-extrabold text-rose-500 text-xl z-10 text-glow-magenta">INFERNO</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-white text-sm">VOLCANIC CRUCIBLE</h4>
+            <p class="text-xs text-slate-400">Dark basalt fortress with lethal flowing lava trenches, volcanic fog, and high-stakes suspension bridges.</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-rose-400">
+            <span>SIZE: 140x140m</span>
+            <span>HAZARD: LAVA</span>
+          </div>
+        </div>
+
+        <!-- Map 4 -->
+        <div class="map-card p-4 flex flex-col justify-between" data-map="oasis">
+          <div class="space-y-2">
+            <div class="h-32 bg-slate-900 border border-purple-500/30 rounded flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.3)_0%,transparent_70%)]"></div>
+              <span class="font-orbitron font-extrabold text-purple-400 text-xl z-10">OASIS</span>
+            </div>
+            <h4 class="font-orbitron font-bold text-white text-sm">CYBER TEMPLE</h4>
+            <p class="text-xs text-slate-400">Vaporwave dusk sanctuary with turquoise reflecting pools, holographic torii arches, and shrine platforms.</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-purple-400">
+            <span>SIZE: 160x160m</span>
+            <span>ENERGY POOLS: 1</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: MATCHMAKING & 2-PLAYER ROOM HUB -->
+      <section id="tab-modes" class="lobby-tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+        <!-- Mode 1: Practice Match -->
+        <div class="bg-slate-950/80 border border-cyan-neon/30 p-6 rounded clip-tactical-tl flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="text-xs font-mono text-cyan-neon font-bold uppercase">// SOLO TRAINING</span>
+            <h3 class="text-xl font-orbitron font-bold text-white">PRACTICE MATCH</h3>
+            <p class="text-sm text-slate-300">
+              Test all 5 weapons, movement sliding, jump pads, and target drones alongside an interactive AI Combat Bot. Perfect for warmup and solo play!
+            </p>
+          </div>
+          <button id="btn-start-practice" class="btn-cyber w-full py-3 text-sm">
+            ENTER PRACTICE ARENA
+          </button>
+        </div>
+
+        <!-- Mode 2: 2-Player Versus Friend -->
+        <div class="bg-slate-950/80 border border-magenta-neon/40 p-6 rounded clip-tactical-br flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <span class="text-xs font-mono text-magenta-neon font-bold uppercase">// 2-PLAYER VERSUS FRIEND</span>
+            <h3 class="text-xl font-orbitron font-bold text-white">MULTIPLAYER 1v1 DUEL</h3>
+            <p class="text-sm text-slate-300">
+              Host a match to get a 6-digit Room Code and shareable URL for your friend, or join an existing room to duel immediately!
+            </p>
+
+            <!-- Room Code Inputs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+              <div>
+                <label class="block text-[11px] font-mono text-slate-400 mb-1">HOST NEW ROOM</label>
+                <button id="btn-host-room" class="btn-cyber btn-cyber-magenta w-full py-2 text-xs">
+                  GENERATE ROOM CODE
+                </button>
+              </div>
+              <div>
+                <label class="block text-[11px] font-mono text-slate-400 mb-1">JOIN WITH CODE</label>
+                <div class="flex gap-2">
+                  <input type="text" id="input-join-code" placeholder="ROOM-CODE" class="w-full bg-slate-900 border border-slate-700 px-3 py-1 text-white font-mono uppercase text-xs rounded outline-none focus:border-magenta-neon"/>
+                  <button id="btn-join-room" class="btn-cyber btn-cyber-yellow py-1 px-3 text-xs">JOIN</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Instant Local Dual-Tab Play Note -->
+            <div class="bg-slate-900/60 p-2.5 rounded border border-cyan-neon/20 text-xs font-mono text-cyan-neon/80">
+              ★ <strong>LOCAL DUAL PLAY:</strong> Open this game in two separate browser tabs to test 1v1 multiplayer instantly with 0ms delay!
+            </div>
+          </div>
+
+          <div id="room-status-banner" class="text-xs font-mono text-emerald-400 hidden">
+            ROOM READY: <strong id="current-room-code" class="text-white">---</strong> (Share link or code with player 2)
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: FRIENDS & SQUAD HUB -->
+      <section id="tab-friends" class="lobby-tab-content hidden grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
+        <!-- Left: Friends List -->
+        <div class="md:col-span-7 bg-slate-950/80 border border-cyan-neon/30 p-6 rounded flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 class="font-orbitron font-bold text-white text-base">FRIENDS MATRIX</h3>
+              <span class="text-xs font-mono text-emerald-400">● 2 ONLINE</span>
+            </div>
+            
+            <div class="space-y-2 mt-4" id="friends-list-container">
+              <div class="flex items-center justify-between p-3 bg-slate-900/70 border border-slate-800 rounded">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+                  <div>
+                    <div class="font-bold text-sm text-white">NEXUS_RAIDER</div>
+                    <div class="text-[11px] font-mono text-slate-400">STATUS: IN LOBBY</div>
+                  </div>
+                </div>
+                <button class="btn-cyber text-xs py-1 px-3 btn-invite-friend">INVITE TO DUEL</button>
+              </div>
+
+              <div class="flex items-center justify-between p-3 bg-slate-900/70 border border-slate-800 rounded">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+                  <div>
+                    <div class="font-bold text-sm text-white">GHOST_WALKER</div>
+                    <div class="text-[11px] font-mono text-slate-400">STATUS: IN PRACTICE</div>
+                  </div>
+                </div>
+                <button class="btn-cyber text-xs py-1 px-3 btn-invite-friend">INVITE TO DUEL</button>
+              </div>
+
+              <div class="flex items-center justify-between p-3 bg-slate-900/40 border border-slate-800 rounded opacity-60">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 rounded-full bg-slate-600"></div>
+                  <div>
+                    <div class="font-bold text-sm text-slate-400">TITAN_VANGUARD</div>
+                    <div class="text-[11px] font-mono text-slate-500">STATUS: OFFLINE</div>
+                  </div>
+                </div>
+                <span class="text-xs font-mono text-slate-500">OFFLINE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Friend Input -->
+          <div class="pt-4 border-t border-slate-800 flex gap-2">
+            <input type="text" id="input-add-friend" placeholder="ENTER FRIEND CALLSIGN..." class="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-white font-mono text-xs rounded outline-none focus:border-cyan-neon"/>
+            <button id="btn-add-friend" class="btn-cyber text-xs py-2 px-4">ADD FRIEND</button>
+          </div>
+        </div>
+
+        <!-- Right: Recent Matches -->
+        <div class="md:col-span-5 bg-slate-950/80 border border-cyan-neon/30 p-6 rounded flex flex-col justify-between">
+          <div>
+            <h3 class="font-orbitron font-bold text-white text-base pb-3 border-b border-slate-800">
+              RECENT MATCH TELEMETRY
+            </h3>
+            <div class="space-y-3 mt-4 text-xs font-mono">
+              <div class="p-2.5 bg-slate-900/50 border-l-2 border-emerald-400 rounded">
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-emerald-400 font-bold">VICTORY (10 - 7)</span>
+                  <span>SECTOR 07</span>
+                </div>
+                <div class="text-slate-500 text-[10px] mt-0.5">VS NEXUS_RAIDER // 03:42</div>
+              </div>
+              <div class="p-2.5 bg-slate-900/50 border-l-2 border-rose-500 rounded">
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-rose-500 font-bold">DEFEAT (8 - 10)</span>
+                  <span>SOLARIS BAY</span>
+                </div>
+                <div class="text-slate-500 text-[10px] mt-0.5">VS GHOST_WALKER // 04:15</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Lobby Footer -->
+    <footer class="flex flex-wrap items-center justify-between gap-4 border-t border-cyan-neon/30 pt-4">
+      <div class="flex items-center gap-4 text-xs font-mono text-slate-400">
+        <span>ACTIVE MAP: <strong id="lobby-active-map-name" class="text-cyan-neon">SECTOR 07</strong></span>
+        <span>|</span>
+        <span>STATUS: <strong class="text-emerald-400">ENGAGEMENT READY</strong></span>
+      </div>
+
+      <!-- MASTER PLAY START BUTTON -->
+      <button id="btn-master-play" class="btn-cyber btn-cyber-magenta text-base md:text-lg px-10 py-3.5 pulse-cyan tracking-widest font-extrabold">
+        ▶ LAUNCH ENGAGEMENT
+      </button>
+    </footer>
+  </div>
+
+  <!-- =========================================================================
+       4. SCREEN: THREE.JS 3D ARENA & IN-GAME HUD
+       ========================================================================= -->
+  <div id="screen-game" class="screen-layer hidden-screen select-none">
+    
+    <!-- Three.js Viewport Canvas Container -->
+    <div id="threejs-container" class="fixed inset-0 z-0 w-full h-full"></div>
+
+    <!-- CRT Vignette & Atmospheric Overlay -->
+    <div class="pointer-events-none fixed inset-0 z-10 scanlines opacity-60"></div>
+    <div class="pointer-events-none fixed inset-0 z-10 crt-vignette"></div>
+
+    <!-- Screen Damage Flash -->
+    <div id="damage-flash" class="pointer-events-none fixed inset-0 z-15 opacity-0 transition-opacity duration-75 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(255,0,85,0.45)_100%)]"></div>
+
+    <!-- Sniper ADS Scope Overlay -->
+    <div id="sniper-scope-overlay">
+      <div class="scope-reticle-circle flex items-center justify-center">
+        <!-- Crosshairs -->
+        <div class="absolute w-full h-[1px] bg-cyan-neon/80"></div>
+        <div class="absolute h-full w-[1px] bg-cyan-neon/80"></div>
+        <div class="absolute w-12 h-12 border border-cyan-neon/60 rounded-full"></div>
+        <div class="absolute top-8 text-[10px] font-mono text-cyan-neon tracking-widest">HV RAIL OPTIC // 4x ZOOM</div>
+      </div>
+    </div>
+
+    <!-- Dynamic Tactical Alerts & Hit Markers -->
+    <div class="pointer-events-none fixed top-20 left-1/2 -translate-x-1/2 z-30 transition-all duration-300 opacity-0" id="mobility-alert">
+      <div class="px-6 py-2 bg-slate-950/90 border border-cyan-neon/80 text-cyan-neon font-mono font-bold tracking-widest text-sm rounded shadow-[0_0_20px_rgba(0,243,255,0.5)] hud-glow-cyan uppercase" id="mobility-alert-text">
+        BURST // DASH ACTIVE
+      </div>
+    </div>
+
+    <div class="pointer-events-none fixed top-32 left-1/2 -translate-x-1/2 z-30 transition-all duration-200 opacity-0" id="hit-feed">
+      <div class="text-xs md:text-sm font-mono tracking-widest font-bold text-magenta-neon hud-glow-magenta uppercase px-4 py-1 bg-slate-950/90 border border-magenta-neon/60 rounded shadow-[0_0_15px_rgba(255,0,85,0.4)]" id="hit-feed-text">
+        TARGET HIT +150
+      </div>
+    </div>
+
+    <!-- Central Precision Tactical Crosshair -->
+    <div class="pointer-events-none fixed inset-0 z-30 flex items-center justify-center transition-transform duration-75" id="fps-crosshair">
+      <div class="relative w-12 h-12 flex items-center justify-center">
+        <div class="w-1.5 h-1.5 rounded-full bg-cyan-neon hud-glow-cyan shadow-[0_0_10px_#00f3ff]"></div>
+        <div class="absolute top-1 w-[2px] h-3 bg-cyan-neon/90 shadow-[0_0_6px_#00f3ff]"></div>
+        <div class="absolute bottom-1 w-[2px] h-3 bg-cyan-neon/90 shadow-[0_0_6px_#00f3ff]"></div>
+        <div class="absolute left-1 h-[2px] w-3 bg-cyan-neon/90 shadow-[0_0_6px_#00f3ff]"></div>
+        <div class="absolute right-1 h-[2px] w-3 bg-cyan-neon/90 shadow-[0_0_6px_#00f3ff]"></div>
+        <div class="absolute inset-0 border border-cyan-neon/20 rounded-full scale-125 border-dashed"></div>
+      </div>
+    </div>
+
+    <!-- Pointer Lock Prompt Modal -->
+    <div id="lock-prompt" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="max-w-md w-full bg-slate-900 border border-cyan-neon/80 p-6 rounded shadow-[0_0_30px_rgba(0,243,255,0.3)] text-center clip-tactical-both">
+        <h3 class="text-xl font-orbitron font-bold text-white mb-2 text-glow-cyan">CLICK TO ENGAGE</h3>
+        <p class="text-xs font-mono text-slate-300 mb-5">
+          Pointer lock captures mouse for 360° tactical combat. Press [ESC] at any time for settings or to release mouse.
+        </p>
+        <button id="btn-enter-arena" class="btn-cyber w-full py-3 text-sm">ENGAGE COMBAT LOCK</button>
+      </div>
+    </div>
+
+    <!-- Stitch Tactical In-Game HUD Overlay -->
+    <div class="pointer-events-none relative z-20 flex flex-col justify-between h-full p-4 md:p-8">
+      
+      <!-- TOP HUD: Match State, 1v1 Scores & Compass -->
+      <header class="flex items-start justify-between gap-2">
+        <!-- Top Left: Sector & Telemetry -->
+        <div class="flex items-center gap-4 bg-slate-950/80 backdrop-blur-md border-l-4 border-cyan-neon px-4 py-2 clip-tactical-br border-y border-r border-cyan-neon/30">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-neon animate-pulse shadow-[0_0_8px_#00f3ff]"></span>
+              <span class="text-xs uppercase tracking-wider font-bold text-cyan-neon" id="hud-sector-title">SECTOR // CYBER_GRID_07</span>
+            </div>
+            <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400 mt-0.5">
+              <span>FPS: <strong class="text-white font-bold" id="hud-fps">60</strong></span>
+              <span class="text-slate-600">|</span>
+              <span>LATENCY: <strong class="text-emerald-400 font-bold">12ms</strong></span>
+              <span class="text-slate-600">|</span>
+              <span>TICK: <strong>128 Hz</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Center: 1v1 Scoreboard & Compass -->
+        <div class="flex flex-col items-center gap-1.5">
+          <!-- 1v1 Scoreboard Banner -->
+          <div class="flex items-center gap-4 px-6 py-2 bg-slate-950/85 backdrop-blur-md border border-cyan-neon/40 rounded clip-badge text-xs font-mono">
+            <div class="text-right">
+              <span class="text-slate-400 block text-[10px]" id="hud-p1-name">YOU</span>
+              <strong class="text-cyan-neon text-base" id="hud-frags">0</strong>
+            </div>
+            <div class="text-magenta-neon font-bold text-sm">VS</div>
+            <div class="text-left">
+              <span class="text-slate-400 block text-[10px]" id="hud-opp-name">OPPONENT</span>
+              <strong class="text-magenta-neon text-base" id="hud-opp-frags">0</strong>
+            </div>
+            <div class="border-l border-slate-700 pl-3">
+              <span class="text-[10px] text-slate-500 block">TIME</span>
+              <span class="text-slate-200 font-bold" id="hud-timer">00:00</span>
+            </div>
+          </div>
+
+          <!-- Compass Bearing -->
+          <div class="hidden md:flex items-center gap-4 px-6 py-1 bg-slate-950/60 backdrop-blur-md rounded text-[11px] font-mono text-slate-400">
+            <span class="text-cyan-neon font-bold" id="hud-compass-text">▼ 000° N</span>
+          </div>
+        </div>
+
+        <!-- Top Right: Match Goal & Controls Quick Hint -->
+        <div class="bg-slate-950/80 backdrop-blur-md border-r-4 border-magenta-neon px-4 py-2 clip-tactical-tl border-y border-l border-magenta-neon/30 text-right">
+          <div class="text-xs font-mono text-slate-300">
+            TARGET: <strong class="text-magenta-neon" id="hud-goal-text">FIRST TO 10 KILLS</strong>
+          </div>
+          <div class="text-[10px] font-mono text-slate-500 mt-0.5">
+            [ESC] PAUSE / SETTINGS
+          </div>
+        </div>
+      </header>
+
+      <!-- BOTTOM HUD: Health, Mobility, Weapons & Ammo -->
+      <footer class="flex items-end justify-between gap-4">
+        
+        <!-- Bottom Left: Integrity, Speedometer & Dash Indicator -->
+        <div class="flex flex-col gap-2 bg-slate-950/85 backdrop-blur-md border-l-4 border-cyan-neon p-4 rounded clip-tactical-tl border-y border-r border-cyan-neon/30 max-w-sm w-full">
+          <!-- Integrity & Shield -->
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-cyan-neon font-bold" id="hud-integrity-label">INTEGRITY <span id="hud-health">100</span>%</span>
+            <span id="hud-shield-status" class="text-[10px] text-emerald-400">● SHIELDS MAXIMUM</span>
+          </div>
+
+          <!-- Segmented Health Bar (5 segments) -->
+          <div class="flex items-center gap-1.5 h-3 w-full bg-slate-900 p-0.5 rounded">
+            <div id="hp-seg-1" class="h-full flex-1 bg-cyan-neon shadow-[0_0_8px_#00f3ff] rounded-sm transition-colors duration-150"></div>
+            <div id="hp-seg-2" class="h-full flex-1 bg-cyan-neon shadow-[0_0_8px_#00f3ff] rounded-sm transition-colors duration-150"></div>
+            <div id="hp-seg-3" class="h-full flex-1 bg-cyan-neon shadow-[0_0_8px_#00f3ff] rounded-sm transition-colors duration-150"></div>
+            <div id="hp-seg-4" class="h-full flex-1 bg-cyan-neon shadow-[0_0_8px_#00f3ff] rounded-sm transition-colors duration-150"></div>
+            <div id="hp-seg-5" class="h-full flex-1 bg-cyan-neon shadow-[0_0_8px_#00f3ff] rounded-sm transition-colors duration-150"></div>
+          </div>
+
+          <!-- Velocity & Mobility Dash -->
+          <div class="flex items-center justify-between pt-1 text-[11px] font-mono text-slate-400">
+            <div>VELOCITY: <strong class="text-white" id="hud-speed">0</strong> MPH</div>
+            <div id="hud-dash-cd" class="text-cyan-neon font-bold">BURST [Q]: READY</div>
+          </div>
+        </div>
+
+        <!-- Bottom Center: Weapon Quick-Select Slots -->
+        <div class="hidden md:flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md p-2 rounded border border-cyan-neon/30 font-mono text-xs">
+          <div id="weapon-slot-1" class="px-2 py-1 bg-cyan-neon/20 border border-cyan-neon text-cyan-neon font-bold rounded">1: REVOLVER</div>
+          <div id="weapon-slot-2" class="px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 rounded">2: RIFLE</div>
+          <div id="weapon-slot-3" class="px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 rounded">3: SHOTGUN</div>
+          <div id="weapon-slot-4" class="px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 rounded">4: RAILGUN</div>
+          <div id="weapon-slot-5" class="px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 rounded">5: SMG</div>
+        </div>
+
+        <!-- Bottom Right: Active Weapon & Ammo Counter -->
+        <div class="flex flex-col gap-2 bg-slate-950/85 backdrop-blur-md border-r-4 border-magenta-neon p-4 rounded clip-tactical-br border-y border-l border-magenta-neon/30 text-right min-w-[220px]">
+          <div>
+            <div class="text-[10px] font-mono text-slate-400" id="hud-ammo-type">CYLINDER CELLS</div>
+            <div class="font-orbitron font-extrabold text-white text-base" id="hud-weapon-name">PLASMA HAWK</div>
+          </div>
+
+          <!-- Ammo Digits -->
+          <div class="flex items-baseline justify-end gap-2 font-mono">
+            <span class="text-3xl md:text-4xl font-extrabold text-magenta-neon hud-glow-magenta" id="hud-ammo">6</span>
+            <span class="text-sm text-slate-500">/</span>
+            <span class="text-sm font-bold text-slate-400" id="hud-ammo-reserve">36</span>
+          </div>
+
+          <!-- Ammo Energy Pips -->
+          <div class="flex items-center justify-end gap-1.5 h-1.5">
+            <div id="ammo-pip-1" class="h-full w-6 bg-magenta-neon shadow-[0_0_4px_#ff0055] rounded-sm"></div>
+            <div id="ammo-pip-2" class="h-full w-6 bg-magenta-neon shadow-[0_0_4px_#ff0055] rounded-sm"></div>
+            <div id="ammo-pip-3" class="h-full w-6 bg-magenta-neon shadow-[0_0_4px_#ff0055] rounded-sm"></div>
+            <div id="ammo-pip-4" class="h-full w-6 bg-magenta-neon shadow-[0_0_4px_#ff0055] rounded-sm"></div>
+            <div id="ammo-pip-5" class="h-full w-6 bg-magenta-neon shadow-[0_0_4px_#ff0055] rounded-sm"></div>
+          </div>
+        </div>
+
+      </footer>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. MODAL: GLOBAL GAME MANAGEMENT SETTINGS (ADMIN / SYSTEM CONSOLE)
+       ========================================================================= -->
+  <div id="modal-global-settings" class="cyber-modal-overlay">
+    <div class="cyber-modal-card p-6 rounded clip-tactical-tl">
+      <div class="flex items-center justify-between pb-3 border-b border-cyan-neon/40 mb-6">
+        <div>
+          <h3 class="font-orbitron font-bold text-xl text-white text-glow-cyan">GLOBAL GAME MANAGEMENT</h3>
+          <p class="text-xs font-mono text-cyan-neon/70">SYSTEM GRAPHICS, CUSTOM AUDIO URLS &amp; CONTROLS</p>
+        </div>
+        <button id="btn-close-global-settings" class="text-slate-400 hover:text-white font-mono text-lg">✕</button>
+      </div>
+
+      <div class="space-y-6 text-sm">
+        
+        <!-- SECTION 1: GRAPHICS & PERFORMANCE -->
+        <div class="border border-slate-800 p-4 rounded bg-slate-950/60">
+          <h4 class="font-mono text-xs uppercase text-cyan-neon font-bold mb-3">// 1. GRAPHICS &amp; VISUAL ENGINE</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1">SHADOW FIDELITY</label>
+              <select id="setting-shadows" class="w-full bg-slate-900 border border-slate-700 px-3 py-1.5 text-white font-mono text-xs rounded">
+                <option value="off">SHADOWS: OFF</option>
+                <option value="medium" selected>MEDIUM (PCF SOFT)</option>
+                <option value="high">ULTRA HIGH</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1">FIELD OF VIEW (FOV)</label>
+              <div class="flex items-center gap-2">
+                <input type="range" id="setting-fov" min="65" max="105" value="75" class="w-full"/>
+                <span id="setting-fov-val" class="font-mono text-xs text-cyan-neon w-10">75°</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 pt-4">
+              <input type="checkbox" id="setting-scanlines" checked class="rounded bg-slate-900 text-cyan-neon"/>
+              <label for="setting-scanlines" class="text-xs font-mono text-slate-300">CRT SCANLINE EFFECT</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: AUDIO HUB & CUSTOM AUDIO URL OVERRIDES -->
+        <div class="border border-slate-800 p-4 rounded bg-slate-950/60">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-mono text-xs uppercase text-cyan-neon font-bold">// 2. AUDIO HUB &amp; CUSTOM SOUND LINK INJECTOR</h4>
+            <span class="text-[10px] font-mono text-slate-400">PASTE USER AUDIO LINKS (MP3/WAV/OGG)</span>
+          </div>
+
+          <!-- Volume Sliders -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-slate-800">
+            <div>
+              <label class="block text-[11px] font-mono text-slate-400 mb-1">MASTER VOLUME</label>
+              <input type="range" id="setting-vol-master" min="0" max="100" value="80" class="w-full"/>
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono text-slate-400 mb-1">WEAPONS &amp; SFX</label>
+              <input type="range" id="setting-vol-sfx" min="0" max="100" value="85" class="w-full"/>
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono text-slate-400 mb-1">UI CHIRPS</label>
+              <input type="range" id="setting-vol-ui" min="0" max="100" value="70" class="w-full"/>
+            </div>
+            <div>
+              <label class="block text-[11px] font-mono text-slate-400 mb-1">COMBAT MUSIC</label>
+              <input type="range" id="setting-vol-music" min="0" max="100" value="50" class="w-full"/>
+            </div>
+          </div>
+
+          <!-- Custom Audio URL Override Inputs -->
+          <div class="space-y-3 font-mono text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+              <span class="md:col-span-3 text-slate-300">REVOLVER SHOT URL:</span>
+              <input type="text" id="audio-url-weapon_revolver" placeholder="https://.../revolver.mp3" class="md:col-span-7 bg-slate-900 border border-slate-700 px-2.5 py-1 text-white rounded text-xs"/>
+              <button id="btn-test-audio-weapon_revolver" class="md:col-span-2 btn-cyber text-[10px] py-1 px-2">TEST</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+              <span class="md:col-span-3 text-slate-300">ARC-4 RIFLE SHOT URL:</span>
+              <input type="text" id="audio-url-weapon_rifle" placeholder="https://.../rifle.mp3" class="md:col-span-7 bg-slate-900 border border-slate-700 px-2.5 py-1 text-white rounded text-xs"/>
+              <button id="btn-test-audio-weapon_rifle" class="md:col-span-2 btn-cyber text-[10px] py-1 px-2">TEST</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+              <span class="md:col-span-3 text-slate-300">SHOTGUN BLAST URL:</span>
+              <input type="text" id="audio-url-weapon_shotgun" placeholder="https://.../shotgun.mp3" class="md:col-span-7 bg-slate-900 border border-slate-700 px-2.5 py-1 text-white rounded text-xs"/>
+              <button id="btn-test-audio-weapon_shotgun" class="md:col-span-2 btn-cyber text-[10px] py-1 px-2">TEST</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+              <span class="md:col-span-3 text-slate-300">RAILGUN BEAM URL:</span>
+              <input type="text" id="audio-url-weapon_railgun" placeholder="https://.../railgun.mp3" class="md:col-span-7 bg-slate-900 border border-slate-700 px-2.5 py-1 text-white rounded text-xs"/>
+              <button id="btn-test-audio-weapon_railgun" class="md:col-span-2 btn-cyber text-[10px] py-1 px-2">TEST</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+              <span class="md:col-span-3 text-slate-300">VIPER SMG SHOT URL:</span>
+              <input type="text" id="audio-url-weapon_smg" placeholder="https://.../smg.mp3" class="md:col-span-7 bg-slate-900 border border-slate-700 px-2.5 py-1 text-white rounded text-xs"/>
+              <button id="btn-test-audio-weapon_smg" class="md:col-span-2 btn-cyber text-[10px] py-1 px-2">TEST</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+              <span class="md:col-span-3 text-slate-300">RELOAD SOUND URL:</span>
+              <input type="text" id="audio-url-reload" placeholder="https://.../reload.mp3" class="md:col-span-7 bg-slate-900 border border-slate-700 px-2.5 py-1 text-white rounded text-xs"/>
+              <button id="btn-test-audio-reload" class="md:col-span-2 btn-cyber text-[10px] py-1 px-2">TEST</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: KEYBOARD CONTROLS REFERENCE -->
+        <div class="border border-slate-800 p-4 rounded bg-slate-950/60 font-mono text-xs">
+          <h4 class="text-xs uppercase text-cyan-neon font-bold mb-2">// 3. TACTICAL COMBAT KEYBINDINGS</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-slate-300">
+            <div>[W, A, S, D]: Movement</div>
+            <div>[SPACE]: Tactical Jump</div>
+            <div>[Q] / 2x SHIFT: Burst Dash</div>
+            <div>[C] / CTRL: Power Slide</div>
+            <div>[LEFT CLICK]: Fire Weapon</div>
+            <div>[RIGHT CLICK]: ADS Scope</div>
+            <div>[R]: Weapon Reload</div>
+            <div>[1 - 5]: Swap Weapon</div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: DATA & ACCIDENTAL DATA LOSS PREVENTED RESET -->
+        <div class="flex items-center justify-between pt-2">
+          <button id="btn-request-reset" class="text-rose-500 hover:text-rose-400 font-mono text-xs underline">
+            RESET PROFILE &amp; CUSTOM SETTINGS
+          </button>
+          <button id="btn-save-global-settings" class="btn-cyber px-6 py-2">
+            APPLY &amp; SAVE SETTINGS
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       6. MODAL: MATCH PLAY SETTINGS (IN-GAME / COMBAT RULES CONSOLE)
+       ========================================================================= -->
+  <div id="modal-play-settings" class="cyber-modal-overlay">
+    <div class="cyber-modal-card p-6 rounded clip-tactical-br border-magenta-neon">
+      <div class="flex items-center justify-between pb-3 border-b border-magenta-neon/40 mb-6">
+        <div>
+          <h3 class="font-orbitron font-bold text-xl text-white text-glow-magenta">MATCH PLAY SETTINGS</h3>
+          <p class="text-xs font-mono text-magenta-neon/70">COMBAT PHYSICS, WIN CONDITIONS &amp; BOT DIFFICULTY</p>
+        </div>
+        <button id="btn-close-play-settings" class="text-slate-400 hover:text-white font-mono text-lg">✕</button>
+      </div>
+
+      <div class="space-y-6 text-sm">
+        
+        <!-- Game Mode & Frag Limit -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1">ENGAGEMENT MODE</label>
+            <select id="play-setting-mode" class="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-white font-mono text-xs rounded">
+              <option value="duel">1v1 DUEL // FIRST TO REACH FRAG LIMIT</option>
+              <option value="deathmatch">CONTINUOUS DEATHMATCH</option>
+              <option value="timeAttack">TIME ATTACK</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-mono text-slate-300 mb-1">SCORE TO WIN (FRAGS)</label>
+            <select id="play-setting-kills" class="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-white font-mono text-xs rounded">
+              <option value="5">5 FRAGS</option>
+              <option value="10" selected>10 FRAGS (RECOMMENDED)</option>
+              <option value="15">15 FRAGS</option>
+              <option value="25">25 FRAGS</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Combat Physics Modifiers -->
+        <div class="border border-slate-800 p-4 rounded bg-slate-950/60 space-y-4">
+          <h4 class="font-mono text-xs uppercase text-magenta-neon font-bold">// COMBAT PHYSICS MODIFIERS</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1">MOVEMENT SPEED SCALE</label>
+              <select id="play-setting-speed" class="w-full bg-slate-900 border border-slate-700 px-3 py-1.5 text-white font-mono text-xs rounded">
+                <option value="1.0" selected>1.0x (TACTICAL DEFAULT)</option>
+                <option value="1.25">1.25x (FAST COMBAT)</option>
+                <option value="1.5">1.5x (HYPER AGILITY)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1">GRAVITY ENVIRONMENT</label>
+              <select id="play-setting-gravity" class="w-full bg-slate-900 border border-slate-700 px-3 py-1.5 text-white font-mono text-xs rounded">
+                <option value="1.0" selected>STANDARD GRAVITY (1.0G)</option>
+                <option value="0.65">LOW-G ORBITAL (0.65G)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1">SPARRING BOT DIFFICULTY</label>
+              <select id="play-setting-bot" class="w-full bg-slate-900 border border-slate-700 px-3 py-1.5 text-white font-mono text-xs rounded">
+                <option value="easy">TRAINING // PASSIVE</option>
+                <option value="medium" selected>STANDARD VETERAN</option>
+                <option value="hard">HARDCORE EXPERT</option>
+                <option value="demon">CYBER DEMON (AIM-GOD)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-2">
+            <input type="checkbox" id="play-setting-infammo" class="rounded bg-slate-900 text-magenta-neon"/>
+            <label for="play-setting-infammo" class="text-xs font-mono text-slate-300">INFINITE AMMO // NO RELOAD EXHAUSTION</label>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button id="btn-save-play-settings" class="btn-cyber btn-cyber-magenta px-8 py-2">
+            APPLY PLAY SETTINGS
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       7. MODAL: IN-GAME PAUSE MENU (ESC KEY)
+       ========================================================================= -->
+  <div id="modal-pause-menu" class="cyber-modal-overlay">
+    <div class="max-w-sm w-full bg-slate-900/95 border border-cyan-neon p-6 rounded clip-tactical-both text-center space-y-4">
+      <h3 class="font-orbitron font-bold text-xl text-white text-glow-cyan">COMBAT PAUSED</h3>
+      <div class="space-y-2">
+        <button id="btn-pause-resume" class="btn-cyber w-full py-2.5 text-xs">RESUME MATCH</button>
+        <button id="btn-pause-play-settings" class="btn-cyber btn-cyber-magenta w-full py-2.5 text-xs">MATCH PLAY SETTINGS</button>
+        <button id="btn-pause-global-settings" class="btn-cyber w-full py-2.5 text-xs">GLOBAL AUDIO &amp; GRAPHICS</button>
+        <button id="btn-pause-leave" class="btn-cyber btn-cyber-yellow w-full py-2.5 text-xs">LEAVE TO LOBBY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       8. MODAL: MATCH RECAP (VICTORY / DEFEAT BANNER)
+       ========================================================================= -->
+  <div id="modal-match-over" class="cyber-modal-overlay">
+    <div class="max-w-md w-full bg-slate-950/95 border-2 border-cyan-neon p-8 rounded clip-tactical-both text-center space-y-6">
+      <div id="match-over-badge" class="font-orbitron font-extrabold text-3xl md:text-4xl text-cyan-neon text-glow-cyan">
+        VICTORY
+      </div>
+      <p id="match-over-subtitle" class="font-mono text-xs text-slate-300">
+        TARGET KILL LIMIT REACHED. OPERATIVE DOMINANCE ESTABLISHED.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3 bg-slate-900/80 p-4 rounded text-left font-mono text-xs border border-slate-800">
+        <div>YOUR FRAGS: <strong id="recap-p1-frags" class="text-cyan-neon text-sm">10</strong></div>
+        <div>OPPONENT: <strong id="recap-opp-frags" class="text-magenta-neon text-sm">6</strong></div>
+        <div>MATCH TIME: <strong id="recap-time" class="text-white">03:42</strong></div>
+        <div>ACCURACY: <strong id="recap-accuracy" class="text-emerald-400">78%</strong></div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="btn-recap-rematch" class="btn-cyber w-full py-3 text-xs">REMATCH</button>
+        <button id="btn-recap-lobby" class="btn-cyber btn-cyber-magenta w-full py-3 text-xs">RETURN TO LOBBY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       9. MODAL: ACCIDENTAL DATA LOSS PREVENTED RESET CONFIRMATION
+       ========================================================================= -->
+  <div id="modal-reset-confirm" class="cyber-modal-overlay">
+    <div class="max-w-md w-full bg-slate-950/95 border-2 border-rose-600 p-6 rounded text-center space-y-4">
+      <h3 class="font-orbitron font-bold text-rose-500 text-lg">RESET VERIFICATION REQUIRED</h3>
+      <p class="text-xs font-mono text-slate-300 text-left">
+        Resetting will wipe all customized weapon sound URLs, keybind remappings, and operative customization back to default.
+        Are you sure you want to proceed?
+      </p>
+      <div class="flex gap-3 pt-2">
+        <button id="btn-cancel-reset" class="btn-cyber w-full py-2 text-xs">CANCEL</button>
+        <button id="btn-confirm-reset" class="btn-cyber btn-cyber-magenta w-full py-2 text-xs">CONFIRM RESET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       GAME MODULE SCRIPTS
+       ========================================================================= -->
+  <script src="js/audio-engine.js"></script>
+  <script src="js/weapon-system.js"></script>
+  <script src="js/map-manager.js"></script>
+  <script src="js/network-engine.js"></script>
+  <script src="js/bot-ai.js"></script>
+  <script src="js/settings-manager.js"></script>
+
+  <!-- Master Game Orchestration Script -->
+  <script>
+  (function() {
+    'use strict';
+
+    // -------------------------------------------------------------------------
+    // 1. STATE & CORE THREE.JS GLOBALS
+    // -------------------------------------------------------------------------
+    let currentScreen = 'boot'; // boot, loading, lobby, game
+    let selectedMap = 'sector07';
+    let matchType = 'practice'; // practice, vs_friend
+    let isPointerLocked = false;
+    let matchTimerSeconds = 0;
+    let matchTimerInterval = null;
+    let totalShotsFired = 0;
+    let totalShotsHit = 0;
+
+    // Three.js Core
+    const gameContainer = document.getElementById('threejs-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    window.camera = camera;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    gameContainer.appendChild(renderer.domElement);
+
+    // Systems
+    const mapManager = new MapManager(scene);
+    const weaponSystem = new WeaponSystem(camera, scene);
+    const networkEngine = new NetworkEngine(scene);
+
+    // Player State
+    const player = {
+      position: new THREE.Vector3(0, 3, 30),
+      velocity: new THREE.Vector3(0, 0, 0),
+      radius: 1.0,
+      standEyeHeight: 3.0,
+      crouchEyeHeight: 1.6,
+      currentEyeHeight: 3.0,
+      isGrounded: true,
+      isSliding: false,
+      slideTimer: 0,
+      slideDirection: new THREE.Vector3(),
+      dashCooldown: 0,
+      jumpBufferTimer: 0,
+      cameraTilt: 0,
+      targetTilt: 0,
+      mph: 0,
+      health: 100,
+      maxHealth: 100,
+      frags: 0
+    };
+
+    const botAI = new BotAIEngine(scene, player);
+    window.botAI = botAI;
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x18243b, 1.8);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xa6d8ff, 3.0);
+    dirLight.position.set(45, 75, 35);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.set(2048, 2048);
+    scene.add(dirLight);
+
+    // Visual Effects Arrays
+    const activeTracers = [];
+    const activeDecals = [];
+    const activeParticles = [];
+
+    // Controls
+    const keys = {};
+    let yaw = 0;
+    let pitch = 0;
+    const PITCH_LIMIT = (85 * Math.PI) / 180;
+    let gunSwayX = 0;
+    let gunSwayY = 0;
+    let bobbingTimer = 0;
+    let lastShiftPressTime = 0;
+
+    // -------------------------------------------------------------------------
+    // 2. SCREEN STATE MACHINE & FLOW
+    // -------------------------------------------------------------------------
+    function showScreen(screenId) {
+      currentScreen = screenId;
+      const screens = ['boot', 'loading', 'lobby', 'game'];
+      screens.forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (el) {
+          if (s === screenId) {
+            el.classList.remove('hidden-screen');
+          } else {
+            el.classList.add('hidden-screen');
+          }
+        }
+      });
+
+      if (screenId === 'lobby') {
+        initAvatarPreview();
+      }
+    }
+
+    // 1. BOOT SCREEN INTERACTION
+    const btnBootStart = document.getElementById('btn-boot-start');
+    if (btnBootStart) {
+      btnBootStart.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playBootChord();
+        showScreen('loading');
+        runLoadingSequence();
+      });
+    }
+
+    // 2. SHADER & ASSET LOADING SEQUENCE
+    function runLoadingSequence() {
+      const bar = document.getElementById('loading-bar');
+      const percentEl = document.getElementById('loading-percent-text');
+      const statusEl = document.getElementById('loading-status-text');
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 12) + 6;
+        if (progress > 100) progress = 100;
+
+        if (bar) bar.style.width = progress + '%';
+        if (percentEl) percentEl.textContent = progress + '%';
+
+        if (progress > 25 && progress <= 60 && statusEl) {
+          statusEl.textContent = 'Generating 4 arena environments & jump physics...';
+        } else if (progress > 60 && progress <= 85 && statusEl) {
+          statusEl.textContent = 'Mounting 5 tactical weapon rigs & audio synthesizers...';
+        } else if (progress > 85 && statusEl) {
+          statusEl.textContent = 'Ready for tactical operative deployment!';
+        }
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            showScreen('lobby');
+          }, 350);
+        }
+      }, 120);
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. 3D OPERATIVE LOBBY AVATAR PREVIEW
+    // -------------------------------------------------------------------------
+    let avatarRenderer = null;
+    let avatarScene = null;
+    let avatarCamera = null;
+    let avatarMeshGroup = null;
+    let isDraggingAvatar = false;
+    let prevMouseX = 0;
+
+    function initAvatarPreview() {
+      const container = document.getElementById('avatar-viewport-container');
+      if (!container || avatarRenderer) return;
+
+      const w = container.clientWidth || 400;
+      const h = container.clientHeight || 400;
+
+      avatarScene = new THREE.Scene();
+      avatarCamera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+      avatarCamera.position.set(0, 2.2, 5.2);
+
+      avatarRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      avatarRenderer.setSize(w, h);
+      avatarRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      container.appendChild(avatarRenderer.domElement);
+
+      const aLight = new THREE.AmbientLight(0xffffff, 1.4);
+      avatarScene.add(aLight);
+      const dLight = new THREE.DirectionalLight(0x00f3ff, 2.5);
+      dLight.position.set(3, 5, 4);
+      avatarScene.add(dLight);
+
+      // Pedestal
+      const ped = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.6, 1.8, 0.25, 24),
+        new THREE.MeshStandardMaterial({ color: 0x09101f, metalness: 0.9, roughness: 0.2 })
+      );
+      ped.position.set(0, -0.1, 0);
+      avatarScene.add(ped);
+
+      // Character Group
+      avatarMeshGroup = new THREE.Group();
+      avatarScene.add(avatarMeshGroup);
+
+      buildLobbyAvatarModel();
+
+      // Mouse drag rotation
+      container.addEventListener('mousedown', (e) => {
+        isDraggingAvatar = true;
+        prevMouseX = e.clientX;
+      });
+      window.addEventListener('mouseup', () => { isDraggingAvatar = false; });
+      window.addEventListener('mousemove', (e) => {
+        if (!isDraggingAvatar || !avatarMeshGroup) return;
+        const dx = e.clientX - prevMouseX;
+        avatarMeshGroup.rotation.y += dx * 0.015;
+        prevMouseX = e.clientX;
+      });
+
+      // Render loop for lobby avatar
+      function renderAvatar() {
+        if (currentScreen === 'lobby') {
+          if (!isDraggingAvatar && avatarMeshGroup) {
+            avatarMeshGroup.rotation.y += 0.005; // gentle idle rotation
+          }
+          avatarRenderer.render(avatarScene, avatarCamera);
+        }
+        requestAnimationFrame(renderAvatar);
+      }
+      renderAvatar();
+    }
+
+    function buildLobbyAvatarModel() {
+      if (!avatarMeshGroup) return;
+      while (avatarMeshGroup.children.length > 0) {
+        avatarMeshGroup.remove(avatarMeshGroup.children[0]);
+      }
+
+      const p = window.SettingsManager.operativeProfile;
+      const visorMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(p.visorColor) });
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 });
+      const armorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.25, metalness: 0.85 });
+
+      if (p.skin === 'shadow') {
+        bodyMat.color.setHex(0x050505); armorMat.color.setHex(0x180005);
+      } else if (p.skin === 'arctic') {
+        bodyMat.color.setHex(0xdbeafe); armorMat.color.setHex(0x93c5fd);
+      } else if (p.skin === 'solar') {
+        bodyMat.color.setHex(0x2d1a00); armorMat.color.setHex(0xd4af37);
+      } else if (p.skin === 'toxic') {
+        bodyMat.color.setHex(0x0f291e); armorMat.color.setHex(0x15803d);
+      }
+
+      // Torso & Chest
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.7), bodyMat);
+      torso.position.set(0, 1.9, 0);
+      avatarMeshGroup.add(torso);
+
+      const chest = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.9, 0.75), armorMat);
+      chest.position.set(0, 2.05, 0.05);
+      avatarMeshGroup.add(chest);
+
+      // Head & Visor
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.7, 0.65), bodyMat);
+      head.position.set(0, 2.95, 0);
+      avatarMeshGroup.add(head);
+
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.4), visorMat);
+      visor.position.set(0, 3.02, 0.2);
+      avatarMeshGroup.add(visor);
+
+      // Limbs
+      const armGeo = new THREE.BoxGeometry(0.35, 1.3, 0.35);
+      const lArm = new THREE.Mesh(armGeo, armorMat); lArm.position.set(-0.85, 1.85, 0); avatarMeshGroup.add(lArm);
+      const rArm = new THREE.Mesh(armGeo, armorMat); rArm.position.set(0.85, 1.85, 0); avatarMeshGroup.add(rArm);
+
+      const legGeo = new THREE.BoxGeometry(0.42, 1.5, 0.45);
+      const lLeg = new THREE.Mesh(legGeo, bodyMat); lLeg.position.set(-0.35, 0.75, 0); avatarMeshGroup.add(lLeg);
+      const rLeg = new THREE.Mesh(legGeo, bodyMat); rLeg.position.set(0.35, 0.75, 0); avatarMeshGroup.add(rLeg);
+
+      // Gun in hand
+      const gun = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.24, 0.9), armorMat);
+      gun.position.set(0.85, 1.4, -0.45);
+      avatarMeshGroup.add(gun);
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. LOBBY NAVIGATION & CUSTOMIZATION LISTENERS
+    // -------------------------------------------------------------------------
+    // Tab switching
+    document.querySelectorAll('.lobby-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        document.querySelectorAll('.lobby-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const targetId = btn.dataset.tab;
+        document.querySelectorAll('.lobby-tab-content').forEach(c => {
+          if (c.id === targetId) c.classList.remove('hidden');
+          else c.classList.add('hidden');
+        });
+      });
+    });
+
+    // Operative Name Change
+    const inputOpName = document.getElementById('input-op-name');
+    const previewOpName = document.getElementById('preview-op-name');
+    if (inputOpName) {
+      inputOpName.addEventListener('input', (e) => {
+        const val = e.target.value.trim() || 'OPERATIVE';
+        if (previewOpName) previewOpName.textContent = val;
+        window.SettingsManager.operativeProfile.name = val;
+        window.SettingsManager.saveToStorage();
+      });
+    }
+
+    // Skin Buttons
+    document.querySelectorAll('.skin-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        window.SettingsManager.operativeProfile.skin = btn.dataset.skin;
+        window.SettingsManager.saveToStorage();
+        buildLobbyAvatarModel();
+      });
+    });
+
+    // Visor Color Pickers
+    document.querySelectorAll('.visor-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        window.SettingsManager.operativeProfile.visorColor = btn.dataset.color;
+        window.SettingsManager.saveToStorage();
+        buildLobbyAvatarModel();
+      });
+    });
+
+    // Map Cards
+    document.querySelectorAll('.map-card').forEach(card => {
+      card.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        document.querySelectorAll('.map-card').forEach(c => c.classList.remove('active-map'));
+        card.classList.add('active-map');
+        selectedMap = card.dataset.map;
+        const mapNameEl = document.getElementById('lobby-active-map-name');
+        if (mapNameEl) mapNameEl.textContent = card.querySelector('h4').textContent;
+      });
+    });
+
+    // Practice Mode Button
+    const btnStartPractice = document.getElementById('btn-start-practice');
+    if (btnStartPractice) {
+      btnStartPractice.addEventListener('click', () => {
+        matchType = 'practice';
+        startMatch();
+      });
+    }
+
+    // Host Room Button
+    const btnHostRoom = document.getElementById('btn-host-room');
+    if (btnHostRoom) {
+      btnHostRoom.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        networkEngine.initWebRTC(code, true, (success) => {
+          const banner = document.getElementById('room-status-banner');
+          const codeEl = document.getElementById('current-room-code');
+          if (banner && codeEl) {
+            codeEl.textContent = code;
+            banner.classList.remove('hidden');
+          }
+        });
+        matchType = 'vs_friend';
+      });
+    }
+
+    // Join Room Button
+    const btnJoinRoom = document.getElementById('btn-join-room');
+    const inputJoinCode = document.getElementById('input-join-code');
+    if (btnJoinRoom && inputJoinCode) {
+      btnJoinRoom.addEventListener('click', () => {
+        const code = inputJoinCode.value.trim();
+        if (!code) return;
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        networkEngine.initWebRTC(code, false, (success) => {
+          matchType = 'vs_friend';
+          startMatch();
+        });
+      });
+    }
+
+    // Friends Invite Buttons
+    document.querySelectorAll('.btn-invite-friend').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.TacticalAudio) window.TacticalAudio.playUIClick();
+        btn.textContent = 'INVITE SENT!';
+        btn.classList.add('text-emerald-400');
+        setTimeout(() => { btn.textContent = 'INVITE TO DUEL'; btn.classList.remove('text-emerald-400'); }, 2000);
+      });
+    });
+
+    // Master Play Button
+    const btnMasterPlay = document.getElementById('btn-master-play');
+    if (btnMasterPlay) {
+      btnMasterPlay.addEventListener('click', () => {
+        startMatch();
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. SETTINGS MODALS BINDINGS
+    // -------------------------------------------------------------------------
+    window.SettingsManager.initUIBindings();
+
+    const modalGlobal = document.getElementById('modal-global-settings');
+    const modalPlay = document.getElementById('modal-play-settings');
+    const modalPause = document.getElementById('modal-pause-menu');
+
+    document.getElementById('btn-open-global-settings').onclick = () => modalGlobal.classList.add('active');
+    document.getElementById('btn-close-global-settings').onclick = () => modalGlobal.classList.remove('active');
+    document.getElementById('btn-save-global-settings').onclick = () => modalGlobal.classList.remove('active');
+
+    document.getElementById('btn-open-play-settings').onclick = () => modalPlay.classList.add('active');
+    document.getElementById('btn-close-play-settings').onclick = () => modalPlay.classList.remove('active');
+    document.getElementById('btn-save-play-settings').onclick = () => modalPlay.classList.remove('active');
+
+    // Profile Reset Dialog
+    document.getElementById('btn-request-reset').onclick = () => {
+      window.SettingsManager.confirmResetProfile(() => {
+        window.location.reload();
+      });
+    };
+
+    // -------------------------------------------------------------------------
+    // 6. MATCH INITIALIZATION & POINTER LOCK
+    // -------------------------------------------------------------------------
+    function startMatch() {
+      if (window.TacticalAudio) window.TacticalAudio.init();
+
+      // Load Selected Map
+      mapManager.loadMap(selectedMap);
+
+      // Position Player at spawn
+      player.position.copy(mapManager.spawnPoints.p1);
+      player.health = 100;
+      player.frags = 0;
+      updateHealthUI();
+      updateFragsUI();
+
+      // Configure Bot AI
+      if (matchType === 'practice') {
+        botAI.active = true;
+        botAI.bot.position.copy(mapManager.spawnPoints.p2);
+        botAI.bot.health = 100;
+        botAI.bot.meshGroup.visible = true;
+      } else {
+        botAI.active = false;
+        botAI.bot.meshGroup.visible = false;
+      }
+
+      // Update Sector Name HUD
+      const mapTitle = selectedMap.toUpperCase();
+      const secTitleEl = document.getElementById('hud-sector-title');
+      if (secTitleEl) secTitleEl.textContent = `SECTOR // ${mapTitle}`;
+
+      // Show In-Game Viewport
+      showScreen('game');
+
+      // Start Match Timer
+      matchTimerSeconds = 0;
+      if (matchTimerInterval) clearInterval(matchTimerInterval);
+      matchTimerInterval = setInterval(() => {
+        matchTimerSeconds++;
+        const timerEl = document.getElementById('hud-timer');
+        if (timerEl) {
+          const m = String(Math.floor(matchTimerSeconds / 60)).padStart(2, '0');
+          const s = String(matchTimerSeconds % 60).padStart(2, '0');
+          timerEl.textContent = `${m}:${s}`;
+        }
+      }, 1000);
+
+      // Request Pointer Lock
+      requestLock();
+    }
+
+    const enterArenaBtn = document.getElementById('btn-enter-arena');
+    const lockPrompt = document.getElementById('lock-prompt');
+
+    function requestLock() {
+      if (window.TacticalAudio) window.TacticalAudio.init();
+      renderer.domElement.requestPointerLock();
+    }
+
+    if (enterArenaBtn) enterArenaBtn.addEventListener('click', requestLock);
+
+    renderer.domElement.addEventListener('click', () => {
+      if (currentScreen !== 'game') return;
+      if (!isPointerLocked) {
+        requestLock();
+      } else {
+        fireActiveWeapon();
+      }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+      isPointerLocked = (document.pointerLockElement === renderer.domElement);
+      if (lockPrompt) {
+        lockPrompt.style.display = isPointerLocked ? 'none' : 'flex';
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // 7. INPUT HANDLING & BALLISTICS
+    // -------------------------------------------------------------------------
+    window.addEventListener('keydown', (e) => {
+      if (currentScreen !== 'game') return;
+      if (!keys[e.code]) {
+        if (e.code === 'KeyQ') triggerDash();
+        if (e.code === 'Space') player.jumpBufferTimer = 0.20;
+        if (e.code === 'KeyC' || e.code === 'ControlLeft') checkSlideTrigger();
+        if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+          const now = performance.now();
+          if (now - lastShiftPressTime < 280) triggerDash();
+          lastShiftPressTime = now;
+        }
+
+        // Weapon Quick Swap (Keys 1 to 5)
+        if (e.code === 'Digit1') weaponSystem.switchWeapon('revolver');
+        if (e.code === 'Digit2') weaponSystem.switchWeapon('rifle');
+        if (e.code === 'Digit3') weaponSystem.switchWeapon('shotgun');
+        if (e.code === 'Digit4') weaponSystem.switchWeapon('railgun');
+        if (e.code === 'Digit5') weaponSystem.switchWeapon('smg');
+
+        // Escape opens Pause Menu
+        if (e.code === 'Escape') {
+          togglePauseMenu();
+        }
+      }
+      keys[e.code] = true;
+      if (e.code === 'KeyR') weaponSystem.reload();
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.code] = false;
+    });
+
+    // Mouse Wheel swaps weapons
+    window.addEventListener('wheel', (e) => {
+      if (currentScreen !== 'game' || !isPointerLocked) return;
+      if (e.deltaY > 0) weaponSystem.nextWeapon();
+      else weaponSystem.prevWeapon();
+    });
+
+    // Right Click ADS Zoom
+    window.addEventListener('mousedown', (e) => {
+      if (currentScreen !== 'game' || !isPointerLocked) return;
+      if (e.button === 2) {
+        weaponSystem.setADS(true);
+      }
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 2) {
+        weaponSystem.setADS(false);
+      }
+    });
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Mouse Look
+    document.addEventListener('mousemove', (e) => {
+      if (!isPointerLocked || currentScreen !== 'game') return;
+      const sensitivity = 0.0022;
+      yaw -= e.movementX * sensitivity;
+      pitch -= e.movementY * sensitivity;
+      pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, pitch));
+
+      gunSwayX -= e.movementX * 0.00035;
+      gunSwayY += e.movementY * 0.00035;
+      gunSwayX = Math.max(-0.06, Math.min(0.06, gunSwayX));
+      gunSwayY = Math.max(-0.04, Math.min(0.04, gunSwayY));
+    });
+
+    // Dash Mechanic
+    function triggerDash() {
+      if (player.dashCooldown > 0) return;
+      if (window.TacticalAudio) window.TacticalAudio.playDash();
+
+      const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+      const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+      const dashDir = new THREE.Vector3();
+
+      if (keys['KeyW']) dashDir.add(forward);
+      if (keys['KeyS']) dashDir.sub(forward);
+      if (keys['KeyD']) dashDir.add(right);
+      if (keys['KeyA']) dashDir.sub(right);
+
+      if (dashDir.lengthSq() < 0.001) dashDir.copy(forward);
+      dashDir.normalize();
+
+      const DASH_SPEED = 54.0 * window.SettingsManager.playSettings.speedMultiplier;
+      player.velocity.x = dashDir.x * DASH_SPEED;
+      player.velocity.z = dashDir.z * DASH_SPEED;
+
+      player.dashCooldown = window.SettingsManager.playSettings.dashCooldown;
+      showHUDAlert('BURST // DASH ACTIVE');
+    }
+
+    // Slide Mechanic
+    function checkSlideTrigger() {
+      const isSprinting = keys['ShiftLeft'] || keys['ShiftRight'];
+      const horizSpeed = Math.sqrt(player.velocity.x * player.velocity.x + player.velocity.z * player.velocity.z);
+      if (player.isGrounded && (isSprinting || horizSpeed > 8.0)) {
+        player.isSliding = true;
+        player.slideTimer = 1.1;
+
+        const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+        const curMove = new THREE.Vector3(player.velocity.x, 0, player.velocity.z);
+        if (curMove.length() > 5.0) player.slideDirection.copy(curMove.normalize());
+        else player.slideDirection.copy(forward);
+
+        player.velocity.x = player.slideDirection.x * 38.0;
+        player.velocity.z = player.slideDirection.z * 38.0;
+
+        if (window.TacticalAudio) window.TacticalAudio.playSlide();
+        showHUDAlert('MOMENTUM // POWER SLIDE');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. COMBAT HITSCAN & TRACERS
+    // -------------------------------------------------------------------------
+    const raycaster = new THREE.Raycaster();
+
+    function fireActiveWeapon() {
+      weaponSystem.fire((def, state) => {
+        totalShotsFired++;
+
+        // Crosshair recoil pulse
+        const ch = document.getElementById('fps-crosshair');
+        if (ch) {
+          ch.classList.add('scale-125');
+          setTimeout(() => ch.classList.remove('scale-125'), 65);
+        }
+
+        const muzzleWorldPos = new THREE.Vector3();
+        weaponSystem.muzzleFlashMesh.getWorldPosition(muzzleWorldPos);
+
+        const pelletCount = def.pelletCount || 1;
+        for (let p = 0; p < pelletCount; p++) {
+          let spreadX = 0;
+          let spreadY = 0;
+          if (def.spread) {
+            spreadX = (Math.random() - 0.5) * def.spread;
+            spreadY = (Math.random() - 0.5) * def.spread;
+          }
+
+          raycaster.setFromCamera(new THREE.Vector2(spreadX, spreadY), camera);
+
+          // Collect shootable targets (Map meshes + Opponent meshes + Bot + Drones)
+          const targets = [...mapManager.shootableMeshes, ...botAI.drones];
+          if (networkEngine.opponent.meshGroup && networkEngine.opponent.meshGroup.visible) {
+            targets.push(networkEngine.opponent.meshGroup);
+          }
+          if (botAI.active && botAI.bot.meshGroup && botAI.bot.meshGroup.visible) {
+            targets.push(botAI.bot.meshGroup);
+          }
+
+          const hits = raycaster.intersectObjects(targets, true);
+          let impactPoint = new THREE.Vector3();
+          let hitNormal = new THREE.Vector3(0, 1, 0);
+
+          if (hits.length > 0) {
+            const hit = hits[0];
+            impactPoint.copy(hit.point);
+            if (hit.face) hitNormal.copy(hit.face.normal).applyEuler(hit.object.rotation).normalize();
+
+            // Check what was hit
+            const uData = hit.object.userData;
+            if (uData && uData.isOpponent) {
+              totalShotsHit++;
+              const isHead = uData.isHead;
+              const dmg = Math.round(def.damage * (isHead ? def.headshotMult : 1.0));
+              if (window.TacticalAudio) window.TacticalAudio.playHit(isHead);
+              showHitToast(isHead ? `HEADSHOT CRITICAL +${dmg * 2}` : `OPPONENT HIT // DMG ${dmg}`);
+
+              // Send hit event over network
+              networkEngine.sendPacket({
+                type: 'HIT_EVENT',
+                damage: dmg,
+                isHeadshot: isHead,
+                attackerName: window.SettingsManager.operativeProfile.name
+              });
+            } else if (uData && uData.isBot) {
+              totalShotsHit++;
+              const isHead = uData.isHead;
+              const dmg = Math.round(def.damage * (isHead ? def.headshotMult : 1.0));
+              if (window.TacticalAudio) window.TacticalAudio.playHit(isHead);
+              showHitToast(isHead ? `HEADSHOT // DMG ${dmg}` : `BOT HIT // DMG ${dmg}`);
+              botAI.damageBot(dmg, isHead);
+            } else if (uData && uData.isDrone) {
+              totalShotsHit++;
+              if (window.TacticalAudio) window.TacticalAudio.playHit(false);
+              uData.health--;
+              if (uData.health <= 0) {
+                player.frags++;
+                updateFragsUI();
+                showHitToast('DRONE NEUTRALIZED +100');
+                hit.object.position.y = -30;
+                setTimeout(() => {
+                  hit.object.position.set((Math.random() - 0.5) * 55, 12 + Math.random() * 4, (Math.random() - 0.5) * 55);
+                  uData.health = uData.maxHealth;
+                }, 3000);
+              } else {
+                showHitToast('TARGET HIT // HP ' + uData.health);
+              }
+            } else {
+              // Hit environment wall or floor
+              spawnDecal(impactPoint, hitNormal);
+            }
+
+            spawnHitParticles(impactPoint, hitNormal, def.tracerColor);
+          } else {
+            impactPoint = raycaster.ray.origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(120));
+          }
+
+          spawnBulletTracer(muzzleWorldPos, impactPoint, def.tracerColor, def.tracerWidth);
+
+          // Broadcast firing event to 2nd player
+          networkEngine.sendPacket({
+            type: 'FIRE_EVENT',
+            startX: muzzleWorldPos.x, startY: muzzleWorldPos.y, startZ: muzzleWorldPos.z,
+            endX: impactPoint.x, endY: impactPoint.y, endZ: impactPoint.z,
+            color: def.tracerColor
+          });
+        }
+      });
+    }
+
+    // Damage on Local Player
+    window.onLocalPlayerDamaged = function(dmg, attackerName, isHeadshot) {
+      player.health -= dmg;
+      if (player.health < 0) player.health = 0;
+      updateHealthUI();
+      triggerDamageFlash();
+
+      if (player.health <= 0) {
+        handleLocalPlayerDeath(attackerName);
+      }
+    };
+
+    function handleLocalPlayerDeath(attackerName) {
+      networkEngine.opponent.frags++;
+      const oppFragsEl = document.getElementById('hud-opp-frags');
+      if (oppFragsEl) oppFragsEl.textContent = networkEngine.opponent.frags;
+
+      showHitToast(`ELIMINATED BY ${attackerName}`);
+
+      // Check Match End condition
+      const fragLimit = window.SettingsManager.playSettings.fragLimit;
+      if (networkEngine.opponent.frags >= fragLimit) {
+        endMatch(false);
+        return;
+      }
+
+      // Respawn after 2.5s
+      setTimeout(() => {
+        player.health = 100;
+        player.position.copy(mapManager.spawnPoints.p1);
+        updateHealthUI();
+      }, 2500);
+    }
+
+    window.spawnTracerEffect = function(start, end, colorHex) {
+      spawnBulletTracer(start, end, colorHex);
+    };
+
+    function spawnBulletTracer(start, end, colorHex = 0x00f3ff, width = 2) {
+      const mat = new THREE.LineBasicMaterial({
+        color: colorHex,
+        linewidth: width,
+        transparent: true,
+        opacity: 1.0,
+        blending: THREE.AdditiveBlending
+      });
+      const geo = new THREE.BufferGeometry().setFromPoints([start, end]);
+      const line = new THREE.Line(geo, mat);
+      scene.add(line);
+      activeTracers.push({ line, life: 0.08 });
+    }
+
+    function spawnDecal(pt, norm) {
+      const geo = new THREE.PlaneGeometry(0.7, 0.7);
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0x001a24,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pt).addScaledVector(norm, 0.02);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), norm);
+      scene.add(mesh);
+      activeDecals.push({ mesh, life: 4.0 });
+    }
+
+    function spawnHitParticles(pt, norm, colorHex = 0x00f3ff) {
+      const count = 12;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const vels = [];
+      for (let i = 0; i < count; i++) {
+        pos[i * 3] = pt.x; pos[i * 3 + 1] = pt.y; pos[i * 3 + 2] = pt.z;
+        vels.push(norm.clone().multiplyScalar(4.0 + Math.random() * 5.0).add(new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2)));
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mat = new THREE.PointsMaterial({ color: colorHex, size: 0.25, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending });
+      const pts = new THREE.Points(geo, mat);
+      scene.add(pts);
+      activeParticles.push({ points: pts, velocities: vels, age: 0, maxAge: 0.35 });
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. HUD NOTIFICATIONS & TELEMETRY
+    // -------------------------------------------------------------------------
+    function showHUDAlert(text) {
+      const alertContainer = document.getElementById('mobility-alert');
+      const alertText = document.getElementById('mobility-alert-text');
+      if (alertContainer && alertText) {
+        alertText.textContent = text;
+        alertContainer.style.opacity = '1';
+        clearTimeout(alertContainer._timeout);
+        alertContainer._timeout = setTimeout(() => { alertContainer.style.opacity = '0'; }, 850);
+      }
+    }
+
+    function showHitToast(text) {
+      const feed = document.getElementById('hit-feed');
+      const feedText = document.getElementById('hit-feed-text');
+      if (feed && feedText) {
+        feedText.textContent = text;
+        feed.style.opacity = '1';
+        clearTimeout(feed._timeout);
+        feed._timeout = setTimeout(() => { feed.style.opacity = '0'; }, 750);
+      }
+    }
+    window.showKillToast = showHitToast;
+
+    function triggerDamageFlash() {
+      const flash = document.getElementById('damage-flash');
+      if (flash) {
+        flash.style.opacity = '1';
+        setTimeout(() => { flash.style.opacity = '0'; }, 90);
+      }
+    }
+
+    function updateHealthUI() {
+      const label = document.getElementById('hud-integrity-label');
+      const shield = document.getElementById('hud-shield-status');
+      if (label) label.textContent = `INTEGRITY ${player.health}%`;
+      if (shield) {
+        if (player.health >= 80) {
+          shield.textContent = '● SHIELDS MAXIMUM'; shield.className = 'text-[10px] text-emerald-400';
+        } else if (player.health >= 40) {
+          shield.textContent = '● SHIELDS COMPROMISED'; shield.className = 'text-[10px] text-yellow-400';
+        } else {
+          shield.textContent = '● WARNING: CRITICAL'; shield.className = 'text-[10px] text-rose-500 animate-pulse';
+        }
+      }
+
+      for (let i = 1; i <= 5; i++) {
+        const seg = document.getElementById(`hp-seg-${i}`);
+        if (seg) {
+          const thresh = (i - 1) * 20;
+          seg.className = player.health > thresh
+            ? 'h-full flex-1 bg-cyan-neon shadow-[0_0_8px_#00f3ff] rounded-sm transition-colors duration-150'
+            : 'h-full flex-1 bg-slate-800 rounded-sm transition-colors duration-150';
+        }
+      }
+    }
+
+    function updateFragsUI() {
+      const fragsEl = document.getElementById('hud-frags');
+      if (fragsEl) fragsEl.textContent = player.frags;
+
+      // Check Victory Condition
+      const fragLimit = window.SettingsManager.playSettings.fragLimit;
+      if (player.frags >= fragLimit) {
+        endMatch(true);
+      }
+    }
+
+    // End of match modal
+    function endMatch(isVictory) {
+      if (document.exitPointerLock) document.exitPointerLock();
+      if (matchTimerInterval) clearInterval(matchTimerInterval);
+
+      const modal = document.getElementById('modal-match-over');
+      const badge = document.getElementById('match-over-badge');
+      const sub = document.getElementById('match-over-subtitle');
+      const p1Frags = document.getElementById('recap-p1-frags');
+      const oppFrags = document.getElementById('recap-opp-frags');
+      const timeEl = document.getElementById('recap-time');
+      const accEl = document.getElementById('recap-accuracy');
+
+      if (badge) {
+        badge.textContent = isVictory ? 'VICTORY' : 'DEFEAT';
+        badge.className = isVictory
+          ? 'font-orbitron font-extrabold text-3xl md:text-4xl text-cyan-neon text-glow-cyan'
+          : 'font-orbitron font-extrabold text-3xl md:text-4xl text-rose-500 text-glow-magenta';
+      }
+      if (sub) {
+        sub.textContent = isVictory
+          ? 'TARGET ELIMINATION GOAL ACHIEVED. YOU ARE THE APEX OPERATIVE.'
+          : 'OPPONENT SECURED WINNING SCORE. REGROUP AND REDEPLOY.';
+      }
+
+      if (p1Frags) p1Frags.textContent = player.frags;
+      if (oppFrags) oppFrags.textContent = networkEngine.opponent.frags;
+      if (timeEl) {
+        const m = String(Math.floor(matchTimerSeconds / 60)).padStart(2, '0');
+        const s = String(matchTimerSeconds % 60).padStart(2, '0');
+        timeEl.textContent = `${m}:${s}`;
+      }
+      if (accEl) {
+        const acc = totalShotsFired > 0 ? Math.round((totalShotsHit / totalShotsFired) * 100) : 100;
+        accEl.textContent = acc + '%';
+      }
+
+      if (modal) modal.classList.add('active');
+    }
+
+    document.getElementById('btn-recap-rematch').onclick = () => {
+      document.getElementById('modal-match-over').classList.remove('active');
+      startMatch();
+    };
+    document.getElementById('btn-recap-lobby').onclick = () => {
+      document.getElementById('modal-match-over').classList.remove('active');
+      showScreen('lobby');
+    };
+
+    // Pause Menu
+    function togglePauseMenu() {
+      if (modalPause.classList.contains('active')) {
+        modalPause.classList.remove('active');
+        requestLock();
+      } else {
+        modalPause.classList.add('active');
+        if (document.exitPointerLock) document.exitPointerLock();
+      }
+    }
+
+    document.getElementById('btn-pause-resume').onclick = togglePauseMenu;
+    document.getElementById('btn-pause-play-settings').onclick = () => {
+      modalPause.classList.remove('active');
+      modalPlay.classList.add('active');
+    };
+    document.getElementById('btn-pause-global-settings').onclick = () => {
+      modalPause.classList.remove('active');
+      modalGlobal.classList.add('active');
+    };
+    document.getElementById('btn-pause-leave').onclick = () => {
+      modalPause.classList.remove('active');
+      showScreen('lobby');
+    };
+
+    // -------------------------------------------------------------------------
+    // 10. PHYSICS & GROUND COLLISION
+    // -------------------------------------------------------------------------
+    function getGroundLevel(px, pz) {
+      let highest = 0;
+      for (let i = 0; i < mapManager.groundColliders.length; i++) {
+        const g = mapManager.groundColliders[i];
+        if (px >= g.minX && px <= g.maxX && pz >= g.minZ && pz <= g.maxZ) {
+          if (g.y > highest) highest = g.y;
+        }
+      }
+      return highest;
+    }
+
+    function resolveObstacleCollisions(newPos, radius) {
+      for (let i = 0; i < mapManager.colliders.length; i++) {
+        const b = mapManager.colliders[i];
+        const pBottom = player.position.y - player.currentEyeHeight;
+        const pTop = player.position.y + 0.5;
+        if (pBottom >= b.max.y || pTop <= b.min.y) continue;
+
+        const closestX = Math.max(b.min.x, Math.min(newPos.x, b.max.x));
+        const closestZ = Math.max(b.min.z, Math.min(newPos.z, b.max.z));
+        const dx = newPos.x - closestX;
+        const dz = newPos.z - closestZ;
+        const distSq = dx * dx + dz * dz;
+
+        if (distSq < radius * radius && distSq > 0.000001) {
+          const dist = Math.sqrt(distSq);
+          const overlap = radius - dist;
+          const nx = dx / dist;
+          const nz = dz / dist;
+          newPos.x += nx * overlap;
+          newPos.z += nz * overlap;
+
+          const dot = player.velocity.x * nx + player.velocity.z * nz;
+          if (dot < 0) {
+            player.velocity.x -= dot * nx;
+            player.velocity.z -= dot * nz;
+          }
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 11. MAIN ENGINE ANIMATION LOOP
+    // -------------------------------------------------------------------------
+    let prevTime = performance.now();
+    let netSyncTimer = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const time = performance.now();
+      const delta = Math.min((time - prevTime) / 1000, 0.1);
+      prevTime = time;
+
+      if (currentScreen !== 'game') return;
+
+      const pSettings = window.SettingsManager.playSettings;
+
+      // 1. Cooldowns
+      if (player.dashCooldown > 0) player.dashCooldown -= delta;
+      if (player.jumpBufferTimer > 0) player.jumpBufferTimer -= delta;
+
+      // 2. Camera Orientation
+      camera.rotation.set(0, 0, 0);
+      camera.rotation.order = "YXZ";
+      camera.rotation.y = yaw;
+      camera.rotation.x = pitch;
+
+      // 3. Movement Direction Input
+      const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+      const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+
+      const moveInput = new THREE.Vector3();
+      if (keys['KeyW']) moveInput.add(forward);
+      if (keys['KeyS']) moveInput.sub(forward);
+      if (keys['KeyD']) moveInput.add(right);
+      if (keys['KeyA']) moveInput.sub(right);
+
+      const isInputting = moveInput.lengthSq() > 0.001;
+      if (isInputting) moveInput.normalize();
+
+      // 4. Slide Management
+      if (player.isSliding) {
+        player.slideTimer -= delta;
+        player.currentEyeHeight += (player.crouchEyeHeight - player.currentEyeHeight) * (14.0 * delta);
+        player.velocity.x -= player.velocity.x * 3.2 * delta;
+        player.velocity.z -= player.velocity.z * 3.2 * delta;
+        const slideSpd = Math.sqrt(player.velocity.x * player.velocity.x + player.velocity.z * player.velocity.z);
+        if (player.slideTimer <= 0 || slideSpd < 4.0 || !player.isGrounded) {
+          player.isSliding = false;
+        }
+      } else {
+        player.currentEyeHeight += (player.standEyeHeight - player.currentEyeHeight) * (12.0 * delta);
+      }
+
+      // 5. Horizontal Acceleration
+      if (!player.isSliding) {
+        const isSprinting = (keys['ShiftLeft'] || keys['ShiftRight']) && !player.isSliding;
+        const baseSpeed = (isSprinting ? 28.0 : 18.0) * pSettings.speedMultiplier;
+        const accelRate = player.isGrounded ? 90.0 : 35.0;
+        const frictionRate = player.isGrounded ? 11.0 : 2.5;
+
+        if (isInputting) {
+          const targetVelX = moveInput.x * baseSpeed;
+          const targetVelZ = moveInput.z * baseSpeed;
+          player.velocity.x += (targetVelX - player.velocity.x) * Math.min(1, accelRate * delta);
+          player.velocity.z += (targetVelZ - player.velocity.z) * Math.min(1, accelRate * delta);
+        } else {
+          player.velocity.x -= player.velocity.x * frictionRate * delta;
+          player.velocity.z -= player.velocity.z * frictionRate * delta;
+          if (Math.abs(player.velocity.x) < 0.05) player.velocity.x = 0;
+          if (Math.abs(player.velocity.z) < 0.05) player.velocity.z = 0;
+        }
+      }
+
+      // 6. Jumping & Gravity
+      const GRAVITY = 52.0 * pSettings.gravityScale;
+      const JUMP_FORCE = 19.5;
+
+      const curGroundY = getGroundLevel(player.position.x, player.position.z);
+      const targetY = curGroundY + player.currentEyeHeight;
+
+      if (player.position.y <= targetY + 0.05) {
+        player.isGrounded = true;
+        if (player.velocity.y < 0) player.velocity.y = 0;
+        player.position.y = targetY;
+      } else {
+        player.isGrounded = false;
+        player.velocity.y -= GRAVITY * delta;
+      }
+
+      if (player.isGrounded && player.jumpBufferTimer > 0) {
+        player.velocity.y = JUMP_FORCE;
+        player.isGrounded = false;
+        player.jumpBufferTimer = 0;
+        if (player.isSliding) player.isSliding = false;
+        if (window.TacticalAudio) window.TacticalAudio.playJump();
+      }
+
+      // Jump Pad Trigger Check
+      const jumpPad = mapManager.checkJumpPad(player.position);
+      if (jumpPad) {
+        player.velocity.y = jumpPad.forceY;
+        if (jumpPad.boostZ) player.velocity.z += jumpPad.boostZ;
+        player.isGrounded = false;
+        if (window.TacticalAudio) window.TacticalAudio.playJump();
+        showHUDAlert('KINETIC LAUNCH // JUMP PAD');
+      }
+
+      // Hazard Zone Damage Check (e.g. Lava in Inferno)
+      const hazardDPS = mapManager.checkHazardDamage(player.position);
+      if (hazardDPS > 0) {
+        player.health -= Math.round(hazardDPS * delta);
+        if (player.health < 0) player.health = 0;
+        updateHealthUI();
+        triggerDamageFlash();
+        if (player.health <= 0) handleLocalPlayerDeath('LAVA HAZARD');
+      }
+
+      // 7. Position Integration & Collision
+      const candidatePos = player.position.clone();
+      candidatePos.x += player.velocity.x * delta;
+      candidatePos.z += player.velocity.z * delta;
+      candidatePos.y += player.velocity.y * delta;
+
+      const surfY = getGroundLevel(candidatePos.x, candidatePos.z);
+      if (candidatePos.y < surfY + player.currentEyeHeight) {
+        candidatePos.y = surfY + player.currentEyeHeight;
+        player.velocity.y = 0;
+        player.isGrounded = true;
+      }
+
+      resolveObstacleCollisions(candidatePos, player.radius);
+      candidatePos.x = Math.max(-75, Math.min(75, candidatePos.x));
+      candidatePos.z = Math.max(-75, Math.min(75, candidatePos.z));
+      player.position.copy(candidatePos);
+
+      // 8. Camera Head Bobbing
+      const horizSpeed = Math.sqrt(player.velocity.x * player.velocity.x + player.velocity.z * player.velocity.z);
+      if (player.isGrounded && horizSpeed > 1.0 && !player.isSliding) {
+        bobbingTimer += delta * (keys['ShiftLeft'] ? 18 : 12);
+        camera.position.set(player.position.x, player.position.y + Math.sin(bobbingTimer) * 0.12, player.position.z);
+      } else {
+        camera.position.copy(player.position);
+      }
+
+      player.mph = Math.round(horizSpeed * 3.8);
+
+      // 9. Gun Sway & Weapon Updates
+      gunSwayX *= 0.88;
+      gunSwayY *= 0.88;
+      weaponSystem.update(delta, gunSwayX, gunSwayY, bobbingTimer);
+
+      // 10. Bot AI & Target Drones
+      botAI.update(delta, time, mapManager.groundColliders, mapManager.colliders, mapManager.shootableMeshes);
+
+      // 11. Network Engine Opponent Interpolation & State Sync
+      networkEngine.update(delta);
+
+      netSyncTimer += delta;
+      if (netSyncTimer >= 0.05) { // 20Hz sync
+        netSyncTimer = 0;
+        networkEngine.sendPacket({
+          type: 'SYNC_STATE',
+          name: window.SettingsManager.operativeProfile.name,
+          skin: window.SettingsManager.operativeProfile.skin,
+          visorColor: window.SettingsManager.operativeProfile.visorColor,
+          x: player.position.x,
+          y: player.position.y,
+          z: player.position.z,
+          yaw: yaw,
+          pitch: pitch,
+          weapon: weaponSystem.currentWeaponId,
+          health: player.health,
+          frags: player.frags
+        });
+      }
+
+      // 12. Active Tracers & Decals Animation
+      for (let i = activeTracers.length - 1; i >= 0; i--) {
+        const tr = activeTracers[i];
+        tr.life -= delta;
+        tr.line.material.opacity = tr.life / 0.08;
+        if (tr.life <= 0) {
+          scene.remove(tr.line);
+          tr.line.geometry.dispose();
+          tr.line.material.dispose();
+          activeTracers.splice(i, 1);
+        }
+      }
+
+      for (let i = activeDecals.length - 1; i >= 0; i--) {
+        const dec = activeDecals[i];
+        dec.life -= delta;
+        if (dec.life < 1.0) dec.mesh.material.opacity = Math.max(0, dec.life);
+        if (dec.life <= 0) {
+          scene.remove(dec.mesh);
+          dec.mesh.geometry.dispose();
+          dec.mesh.material.dispose();
+          activeDecals.splice(i, 1);
+        }
+      }
+
+      for (let i = activeParticles.length - 1; i >= 0; i--) {
+        const p = activeParticles[i];
+        p.age += delta;
+        const posAttr = p.points.geometry.attributes.position;
+        for (let j = 0; j < p.velocities.length; j++) {
+          p.velocities[j].y -= 9.8 * delta;
+          posAttr.setXYZ(
+            j,
+            posAttr.getX(j) + p.velocities[j].x * delta,
+            posAttr.getY(j) + p.velocities[j].y * delta,
+            posAttr.getZ(j) + p.velocities[j].z * delta
+          );
+        }
+        posAttr.needsUpdate = true;
+        p.points.material.opacity = 1.0 - (p.age / p.maxAge);
+        if (p.age >= p.maxAge) {
+          scene.remove(p.points);
+          p.points.geometry.dispose();
+          p.points.material.dispose();
+          activeParticles.splice(i, 1);
+        }
+      }
+
+      // 13. Map Animations
+      mapManager.update(delta, time);
+
+      // 14. Real-Time HUD Telemetry
+      const hudSpeedEl = document.getElementById('hud-speed');
+      const hudFpsEl = document.getElementById('hud-fps');
+      const hudDashCdEl = document.getElementById('hud-dash-cd');
+      const hudCompassEl = document.getElementById('hud-compass-text');
+
+      if (hudSpeedEl) hudSpeedEl.textContent = player.mph;
+      if (hudFpsEl && delta > 0) hudFpsEl.textContent = Math.round(1 / delta);
+
+      if (hudDashCdEl) {
+        if (player.dashCooldown > 0) {
+          hudDashCdEl.textContent = 'BURST CD: ' + player.dashCooldown.toFixed(1) + 's';
+          hudDashCdEl.className = 'text-rose-500 font-bold';
+        } else {
+          hudDashCdEl.textContent = 'BURST [Q]: READY';
+          hudDashCdEl.className = 'text-cyan-neon font-bold';
+        }
+      }
+
+      if (hudCompassEl) {
+        let deg = Math.round(((-yaw * 180 / Math.PI) % 360 + 360) % 360);
+        let cardinal = 'N';
+        if (deg >= 337 || deg < 23) cardinal = 'N';
+        else if (deg >= 23 && deg < 68) cardinal = 'NE';
+        else if (deg >= 68 && deg < 113) cardinal = 'E';
+        else if (deg >= 113 && deg < 158) cardinal = 'SE';
+        else if (deg >= 158 && deg < 203) cardinal = 'S';
+        else if (deg >= 203 && deg < 248) cardinal = 'SW';
+        else if (deg >= 248 && deg < 293) cardinal = 'W';
+        else if (deg >= 293 && deg < 337) cardinal = 'NW';
+        hudCompassEl.textContent = `▼ ${String(deg).padStart(3, '0')}° ${cardinal}`;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // Window Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Start Engine Loop
+    animate();
+
+    // Check for direct join room URL query (?room=CODE)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      setTimeout(() => {
+        const inputJoin = document.getElementById('input-join-code');
+        if (inputJoin) inputJoin.value = roomParam;
+        networkEngine.initWebRTC(roomParam, false, () => {
+          matchType = 'vs_friend';
+          startMatch();
+        });
+      }, 1000);
+    }
+
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+/* ==========================================================================
+   CYBER STRIKE // DUAL ARENA - MASTER STYLESHEET
+   High-Fidelity Cyberpunk & Tactical Sci-Fi UI/UX System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=JetBrains+Mono:wght@400;600;700;800&family=Orbitron:wght@600;800;900&display=swap');
+
+:root {
+  --neon-cyan: #00f3ff;
+  --neon-cyan-glow: rgba(0, 243, 255, 0.55);
+  --neon-magenta: #ff0055;
+  --neon-magenta-glow: rgba(255, 0, 85, 0.55);
+  --neon-yellow: #ffe600;
+  --neon-green: #00ff66;
+  --neon-purple: #b537f2;
+  --bg-deep: #05070f;
+  --bg-panel: rgba(9, 14, 26, 0.88);
+  --bg-glass: rgba(14, 21, 38, 0.72);
+  --border-glow: rgba(0, 243, 255, 0.35);
+  --font-tactical: 'Chakra Petch', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-orbitron: 'Orbitron', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+  font-family: var(--font-tactical);
+  color: #e2e8f0;
+}
+
+/* Custom Tactical Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(5, 8, 16, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-magenta);
+}
+
+/* CRT Scanline & Vignette Effects */
+.scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.32) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.025),
+    rgba(0, 255, 0, 0.015),
+    rgba(0, 0, 255, 0.025)
+  );
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+.crt-vignette {
+  background: radial-gradient(circle at center, transparent 40%, rgba(3, 5, 12, 0.88) 95%);
+  pointer-events: none;
+}
+
+/* Neon Glow Utility Classes */
+.hud-glow-cyan {
+  filter: drop-shadow(0 0 10px var(--neon-cyan-glow));
+}
+.hud-glow-magenta {
+  filter: drop-shadow(0 0 10px var(--neon-magenta-glow));
+}
+.hud-glow-yellow {
+  filter: drop-shadow(0 0 10px rgba(255, 230, 0, 0.5));
+}
+.hud-glow-green {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 102, 0.5));
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan-glow);
+}
+.text-glow-magenta {
+  text-shadow: 0 0 10px var(--neon-magenta), 0 0 20px var(--neon-magenta-glow);
+}
+
+.box-glow-cyan {
+  box-shadow: 0 0 18px var(--neon-cyan-glow), inset 0 0 10px rgba(0, 243, 255, 0.15);
+}
+.box-glow-magenta {
+  box-shadow: 0 0 18px var(--neon-magenta-glow), inset 0 0 10px rgba(255, 0, 85, 0.15);
+}
+
+/* Angled Tactical Clips */
+.clip-tactical-tl {
+  clip-path: polygon(14px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 14px);
+}
+.clip-tactical-br {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+.clip-tactical-both {
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+.clip-badge {
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+
+/* Interactive Futuristic Buttons */
+.btn-cyber {
+  position: relative;
+  font-family: var(--font-tactical);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.65rem 1.6rem;
+  background: rgba(10, 18, 35, 0.85);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  overflow: hidden;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+.btn-cyber:hover {
+  background: var(--neon-cyan);
+  color: #03060f;
+  box-shadow: 0 0 24px var(--neon-cyan-glow);
+  transform: translateY(-1px);
+}
+.btn-cyber:active {
+  transform: translateY(1px);
+}
+
+.btn-cyber-magenta {
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+}
+.btn-cyber-magenta:hover {
+  background: var(--neon-magenta);
+  color: #fff;
+  box-shadow: 0 0 24px var(--neon-magenta-glow);
+}
+
+.btn-cyber-yellow {
+  border-color: var(--neon-yellow);
+  color: var(--neon-yellow);
+}
+.btn-cyber-yellow:hover {
+  background: var(--neon-yellow);
+  color: #000;
+  box-shadow: 0 0 24px rgba(255, 230, 0, 0.6);
+}
+
+/* Screen Transitions & Overlays */
+.screen-layer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.screen-layer.hidden-screen {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.98);
+}
+
+/* 1. Boot Animation Screen */
+#screen-boot {
+  z-index: 100;
+  background: #020409;
+}
+.boot-terminal-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+}
+.logo-glitch {
+  position: relative;
+  animation: glitch-anim 2.5s infinite;
+}
+@keyframes glitch-anim {
+  0% { transform: none; opacity: 1; }
+  7% { transform: skew(-2deg, -1deg); opacity: 0.9; }
+  10% { transform: none; opacity: 1; }
+  27% { transform: none; opacity: 1; }
+  30% { transform: skew(3deg, 1.5deg); filter: hue-rotate(90deg); }
+  35% { transform: none; filter: none; }
+  52% { transform: none; opacity: 1; }
+  55% { transform: scale(1.02) skew(-1deg, 0deg); }
+  56% { transform: none; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* 2. Loading Screen */
+#screen-loading {
+  z-index: 90;
+  background: radial-gradient(circle at center, #0a1124 0%, #03060f 100%);
+}
+.loading-bar-fill {
+  transition: width 0.15s ease-out;
+  box-shadow: 0 0 16px var(--neon-cyan);
+}
+
+/* 3. Main Lobby & Customization Hub */
+#screen-lobby {
+  z-index: 50;
+  background: radial-gradient(circle at 60% 40%, rgba(13, 26, 52, 0.85) 0%, rgba(3, 6, 15, 0.96) 80%);
+}
+
+.lobby-tab-btn {
+  font-family: var(--font-tactical);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.15em;
+  padding: 0.75rem 1.5rem;
+  color: #94a3b8;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.lobby-tab-btn:hover {
+  color: #fff;
+  border-bottom-color: rgba(0, 243, 255, 0.4);
+}
+.lobby-tab-btn.active {
+  color: var(--neon-cyan);
+  border-bottom-color: var(--neon-cyan);
+  text-shadow: 0 0 12px var(--neon-cyan-glow);
+}
+
+/* Operative 3D Avatar Stage Viewport */
+#avatar-viewport-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: radial-gradient(circle at center 65%, rgba(0, 243, 255, 0.12) 0%, transparent 68%);
+}
+
+/* Map Selection Cards */
+.map-card {
+  position: relative;
+  background: rgba(10, 16, 32, 0.75);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.map-card:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.35);
+  transform: translateY(-3px);
+}
+.map-card.active-map {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 28px rgba(0, 243, 255, 0.5), inset 0 0 20px rgba(0, 243, 255, 0.2);
+}
+
+/* Weapon Selection Cards */
+.weapon-card {
+  position: relative;
+  background: rgba(12, 18, 36, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.weapon-card:hover {
+  border-color: var(--neon-cyan);
+  background: rgba(16, 28, 56, 0.85);
+}
+.weapon-card.active-weapon {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 16px var(--neon-cyan-glow);
+  background: rgba(0, 243, 255, 0.08);
+}
+
+/* Modals & Dialogs (Settings, Friends, Pause) */
+.cyber-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 5, 12, 0.82);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.cyber-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cyber-modal-card {
+  width: 95%;
+  max-width: 780px;
+  max-height: 90vh;
+  background: rgba(8, 13, 26, 0.95);
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 0 35px rgba(0, 243, 255, 0.35);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Railgun ADS Sniper Scope Overlay */
+#sniper-scope-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, transparent 38%, rgba(0, 5, 15, 0.95) 40%);
+}
+
+.scope-reticle-circle {
+  width: min(80vh, 80vw);
+  height: min(80vh, 80vw);
+  border: 2px solid var(--neon-cyan);
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 20px var(--neon-cyan-glow), inset 0 0 30px rgba(0, 243, 255, 0.2);
+}
+
+/* Directional Hit Marker */
+.hit-indicator-direction {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 32;
+  transition: opacity 0.3s ease;
+}
+
+/* Animated Toast Feeds */
+@keyframes slideDownToast {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.feed-item {
+  animation: slideDownToast 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pulse Glow & Keyframes */
+@keyframes pulseCyan {
+  0%, 100% { box-shadow: 0 0 10px var(--neon-cyan-glow); }
+  50% { box-shadow: 0 0 25px var(--neon-cyan-glow), 0 0 40px rgba(0, 243, 255, 0.4); }
+}
+.pulse-cyan {
+  animation: pulseCyan 2s infinite;
+}
