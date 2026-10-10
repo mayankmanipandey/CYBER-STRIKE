@@ -1,0 +1,14 @@
+{
+  "name": "cyber-strike-dual-arena-3d",
+  "version": "1.0.0",
+  "description": "High-fidelity cyberpunk 3D first-person shooter featuring real-time multiplayer duels, 4 arenas, 5 tactical firearms, and customizable operatives.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node -e \"console.log('Build complete')\""
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

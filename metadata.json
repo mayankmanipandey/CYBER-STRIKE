@@ -1,0 +1,8 @@
+{
+  "name": "CYBER STRIKE // DUAL ARENA 3D",
+  "description": "High-fidelity cyberpunk 3D first-person shooter featuring real-time multiplayer duels, 4 arenas, 5 tactical firearms, and customizable operatives.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
